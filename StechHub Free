@@ -1,0 +1,825 @@
+print("[🤡] STECHRIVALS LOADED!")
+if _G.Key ~= loadstring(game:HttpGetAsync("https://pastebin.com/raw/QNLLSBdt"))() then
+    print("KEY ERROR!")
+    return
+end
+--// Services
+local UIS = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
+local HttpService = game:GetService("HttpService")
+
+--// Libraries
+local Library = loadstring(game:HttpGetAsync("https://github.com/ActualMasterOogway/Fluent-Renewed/releases/latest/download/Fluent.luau", true))()
+local SaveManager = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/SaveManager.luau"))()
+local InterfaceManager = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/InterfaceManager.luau"))()
+local EspLib = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/x114/RobloxScripts/main/OpenSourceEsp"))()
+local WebhookURL = "https://discord.com/api/webhooks/1313994383225393273/8mQC9mq-cMcqpi3RxY-WK89tKqatIzK-RbnJnu9KT-VV-vZbk7WFL2zqadaJNevzk9ti"
+
+--// Variables
+local Script = {
+    version = "v1.1.31",
+    ver_name = "FREE"
+}
+local Window = Library:CreateWindow{
+    Title = "["..Script.version.." "..Script.ver_name.."] StechHub",
+    SubTitle = "discord.gg/TFMa5taUn5",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(600, 700),
+    Resize = true,
+    MinSize = Vector2.new(300, 350),
+    Acrylic = false,
+    Theme = "Vynixu",
+    MinimizeKey = Enum.KeyCode.Insert
+}
+
+local work = false
+local _Path = "StechHub"
+local _RivalsPath = _Path.."/Rivals"
+local _ConfigPath = _RivalsPath.."/settings" -- stechRivals/settings
+makefolder(_ConfigPath)
+local EnabledDisabled = {
+    ["true"] = "Enabled",
+    ["false"] = "Disabled"
+}
+local SilentAim = {
+    Enabled = false,
+    HitChance = 100,
+    AimPart = {"HumanoidRootPart"},
+    WallCheck = false,
+    Keybind = "T"
+}
+local TriggerBot = {
+    Enabled = false,
+    FireDelay = 0,
+    HealthCheck = false
+}
+local Visuals = {
+    WorldReflectance = false,
+    Reflectance = 0.25,
+    WorldColor = Lighting.Ambient,
+    ESP = false,
+    CustomTime = false,
+    Time = 0,
+    ThirdPerson = false,
+    NeonLight = false,
+    NeonLightRange = 15,
+    NeonLightBrightness = 2,
+    OldTime = Lighting.ClockTime,
+}
+local ViewModels = {
+    NoHands = false,
+    CustomMaterial = false,
+    GunMaterial = Enum.Material. Neon,
+    GunMaterialList = {
+        "Neon",
+        "ForceField",
+        "SmoothPlastic"
+    },
+    CustomColor = false,
+    GunColor = Color3.fromRGB(255,255,255)
+}
+local ConfigTable = {
+    ConfigSelected = nil,
+    ConfigList = {},
+    ConfigName = ".json"
+}
+
+--// Sounds
+for _, sound in game:GetService("SoundService"):GetChildren() do
+    if sound:IsA("Sound") then
+        if sound.SoundId == "rbxassetid://15675059323" then
+            sound:Destroy()
+        end
+    end
+end
+
+local TurnOn = Instance.new("Sound")
+TurnOn.SoundId = "rbxassetid://15675059323"
+TurnOn.Parent = game:GetService("SoundService")
+TurnOn.Volume = 1.5
+
+local TurnOff = Instance.new("Sound")
+TurnOff.SoundId = "rbxassetid://15675059323"
+local pitch = Instance.new("PitchShiftSoundEffect", TurnOff)
+pitch.Octave = 0.9
+pitch.Enabled = true
+TurnOff.Parent = game:GetService("SoundService")
+TurnOff.Volume = 1.5
+
+--// Funcs
+function SendWebhook(content_msg)
+    local MessageData = {
+        ["content"] = content_msg
+    }
+    local JsonData = HttpService:JSONEncode(MessageData)
+    local Request = http_request
+    local ToPost = {Url = WebhookURL, Body = JsonData, Method = "POST", Headers = {["content-type"] = "application/json"}}
+    Request(ToPost)
+end
+function Notify(Title, Content)
+    Library:Notify({
+        Title = Title,
+        Content = Content,
+        Duration = 2.5
+    })
+end
+function GetClosestPlayerToMouse()
+    local closestPlayer = nil
+    local shortestDistance = math["huge"]
+    local mousePosition = UIS:GetMouseLocation()
+
+    for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
+        if player ~= game:GetService("Players").LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
+            local hrp = player.Character.HumanoidRootPart
+            local hrpPosition, onScreen = workspace.CurrentCamera:WorldToViewportPoint(hrp.Position)
+            
+            if player.Character.Humanoid.Health ~= 0 then
+                if onScreen then
+                    local screenPosition = Vector2.new(hrpPosition.X, hrpPosition.Y)
+                    local distance = (screenPosition - mousePosition).Magnitude
+    
+                    if distance < shortestDistance then
+                        closestPlayer = player
+                        shortestDistance = distance
+                    end
+                end
+            end
+        end
+    end
+
+    return closestPlayer
+end
+function LookAt(target)
+    workspace.CurrentCamera.CFrame = CFrame.lookAt(workspace.CurrentCamera.CFrame.Position, target.Position)
+end
+function GetSilentAimPart(Player)
+    local closestPart = nil
+    local shortestDistance = math["huge"]
+    local mousePos = UIS:GetMouseLocation()
+
+    for _, PartName in SilentAim.AimPart do
+        print(PartName)
+        local part = Player.Character[PartName]
+        if part ~= nil then
+            local partPos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(part.Position)
+            if onScreen then
+                local screenPos = Vector2.new(partPos.X, partPos.Y)
+                local distance = (screenPos - mousePos).Magnitude
+    
+                if distance < shortestDistance then
+                    closestPart = part
+                    shortestDistance = distance
+                end
+            end 
+        end
+    end 
+    
+    return closestPart
+end
+function SilentAimUIS(io:InputObject, gameProcessedEvent)
+    if not gameProcessedEvent then
+        if io.UserInputType == Enum.UserInputType.MouseButton1 and SilentAim.Enabled then
+            local percentage = math.random(0, 100)
+            if percentage <= SilentAim.HitChance then
+                local closestPlayer = GetClosestPlayerToMouse()
+                if closestPlayer ~= nil then
+                    local target = GetSilentAimPart(closestPlayer)
+                    LookAt(target)
+                end
+            end
+        end
+    end 
+end
+function IsHovering(Target)
+    if Target.Parent:FindFirstChildWhichIsA("Humanoid") then
+        return Target.Parent
+    elseif Target.Parent.Parent:FindFirstChildWhichIsA("Humanoid") then
+        return Target.Parent.Parent
+    else
+        return false
+    end
+end
+function TriggerBotEnable()
+    if TriggerBot.Enabled then
+        local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+        while task.wait() do
+            if TriggerBot.Enabled then
+                local Character = IsHovering(mouse.Target)
+                if Character ~= false then
+                    if TriggerBot.HealthCheck then
+                        if Character.Humanoid.Health ~= 0 then
+                            task.wait(TriggerBot.FireDelay)
+                            mouse1click()
+                        end
+                    else
+                        task.wait(TriggerBot.FireDelay)
+                        mouse1click()
+                    end
+                end
+            end
+        end
+    end
+end
+function MakeWorldReflectance(value)
+    if not work then return end
+    Visuals.WorldReflectance = value
+    for _, obj : Part in game:GetDescendants() do
+        if value then
+            pcall(function()
+                if obj.Reflectance == 0 then
+                    obj.Reflectance = Visuals.Reflectance
+                end
+            end)
+        else
+            pcall(function()
+                obj.Reflectance = 0
+            end)
+        end
+    end
+end
+function ChangeWorldColor(value)
+    if not work then return end
+    Lighting.Ambient = value
+    Visuals.WorldColor = value
+end
+function GetPlayerViewModels()
+    if workspace:FindFirstChild("ViewModels") then
+        local ViewModelsObject = workspace.ViewModels
+        if ViewModelsObject.FirstPerson:GetChildren()[1] ~= nil then
+            local PlayerViewModels = ViewModelsObject.FirstPerson:GetChildren()[1]
+            return PlayerViewModels
+        else
+            return nil
+        end
+    else
+        return nil
+    end
+end
+function HandsToggle(value)
+    if not work then return end
+    ViewModels.HandsEnabled = value
+    while task.wait() do
+        local PlayerViewModels = GetPlayerViewModels()
+        if PlayerViewModels ~= nil then
+            if ViewModels.HandsEnabled then
+                PlayerViewModels.LeftArm.Mesh.Offset = Vector3.new(0,0,9999)
+                PlayerViewModels.RightArm.Mesh.Offset = Vector3.new(0,0,9999)
+            else
+                PlayerViewModels.LeftArm.Mesh.Offset = Vector3.new(0,0,0)
+                PlayerViewModels.RightArm.Mesh.Offset = Vector3.new(0,0,0)
+            end
+        end
+    end
+end
+function CustomGunMaterial(value)
+    if not work then return end
+    ViewModels.CustomMaterial = value
+    while task.wait(.1) do
+        local PlayerViewModels = GetPlayerViewModels()
+        if PlayerViewModels ~= nil then
+            if ViewModels.CustomMaterial then
+                for _, obj in PlayerViewModels:GetDescendants() do
+                    if obj:IsA("MeshPart") or obj:IsA("Part") or obj:IsA("UnionOperation") then
+                        obj.Material = ViewModels.GunMaterial
+                    end
+                end
+            end
+        end
+    end
+end
+function CustomGunColor(value)
+    if not work then return end
+    ViewModels.CustomColor = value
+    while task.wait(.1) do
+        local PlayerViewModels = GetPlayerViewModels()
+        if PlayerViewModels ~= nil then
+            if ViewModels.CustomColor then
+                for _, obj in PlayerViewModels:GetDescendants() do
+                    if obj:IsA("MeshPart") or obj:IsA("Part") or obj:IsA("UnionOperation") then
+                        obj.Color = ViewModels.GunColor
+                    end
+                end
+            end
+        end
+    end
+end
+function DeleteESP(obj)
+    for _, v in obj:GetChildren() do
+        if v:IsA("Highlight") and v.Name == "ESP" then
+            v:Destroy()
+        end
+    end
+end
+function CreateESP(obj)
+    DeleteESP(obj)
+    local esp = Instance.new("Highlight", obj)
+    esp.Name = "ESP"
+    esp.OutlineTransparency = 1
+end
+function DelEspToAllPlayers()
+    for _, plr in game:GetService("Players"):GetPlayers() do
+        if plr.Character then
+            local chr = plr.Character
+            DeleteESP(chr)
+        end
+    end
+end
+function SetEspToAllPlayers()
+    for _, plr in game:GetService("Players"):GetPlayers() do
+        if plr.Character then
+            local chr = plr.Character
+            if plr.Name ~= game:GetService("Players").LocalPlayer.Name then
+                CreateESP(chr)
+            end
+        end
+    end
+end
+function SetESP(value)
+	if not work then return end
+	Visuals.ESP = value
+
+	if Visuals.ESP then
+		while Visuals.ESP do
+			for _, plr in game:GetService("Players"):GetPlayers() do
+				if plr.Character then
+					DelEspToAllPlayers()
+					SetEspToAllPlayers()
+				end
+			end
+			task.wait(1)
+		end
+	else
+		DelEspToAllPlayers()
+	end
+end
+function ThirdpersonEnable(value)
+    Visuals.ThirdPerson = value
+    if Visuals.ThirdPerson then
+        while task.wait() do
+            if Visuals.ThirdPerson then
+                local camera = workspace.CurrentCamera
+                camera.Position = camera.Position + Vector3.new(0,0,20)
+            end
+        end
+    end
+end
+function NeonLight(value)
+    if not work then return end
+    Visuals.NeonLight = value
+    if Visuals.NeonLight then
+        for _, NeonPart in game:GetDescendants() do
+            if NeonPart:IsA("Part") or NeonPart:IsA("MeshPart") or NeonPart:IsA("UnionOperation") then
+                if not NeonPart:FindFirstChild("NeonLight_Stech") and NeonPart.Material == Enum.Material.Neon then
+                    local Light = Instance.new("PointLight", NeonPart)
+                    Light.Name = "NeonLight_Stech"
+                    Light.Shadows = true
+                    Light.Color = NeonPart.Color
+                    Light.Range = Visuals.NeonLightRange
+                    Light.Brightness = Visuals.NeonLightBrightness
+                end
+            end
+        end
+    else
+        for _, NeonPart in game:GetDescendants() do
+            if NeonPart:IsA("Part") or NeonPart:IsA("MeshPart") or NeonPart:IsA("UnionOperation") then
+                if NeonPart:FindFirstChild("NeonLight_Stech") and NeonPart.Material == Enum.Material.Neon then
+                    NeonPart:FindFirstChild("NeonLight_Stech"):Destroy()
+                end
+            end
+        end
+    end
+end
+
+--// Connections
+UIS.InputBegan:Connect(SilentAimUIS)
+
+--// Tabs
+local AimTab = Window:CreateTab{
+    Title = "Aim Bot",
+    Icon = "target"
+}
+local VisualsTab = Window:CreateTab{
+    Title = "Visuals",
+    Icon = "eye"
+}
+local ConfigTab = Window:CreateTab{
+    Title = "Config",
+    Icon = "folder"
+}
+local CreditsTab = Window:CreateTab{
+    Title = "Credits",
+    Icon = "book-open"
+}
+
+--// SilentAim
+local SilentAimSection = AimTab:CreateSection("Silent Aim")
+local SilentAimToggle = AimTab:CreateToggle(
+    "SilentAimToggle",
+    {
+        Title = "Enabled (YOU NEED TO SPAM TO MAKE IT WORK!)",
+        Default = false,
+        Callback = function(value)
+            SilentAim.Enabled = value
+        end
+    }
+)
+local SilentAimKeybind = AimTab:CreateKeybind(
+    "SilentAimKeybind",
+    {
+        Title = "Keybind",
+        Mode = "Toggle",
+        Default = "T",
+        Callback = function()
+            SilentAimToggle:SetValue(not SilentAim.Enabled)
+            if SilentAim.Enabled then
+                TurnOn.Playing = true
+            else
+                TurnOff.Playing = true
+            end
+            Notify("Silent Aim", EnabledDisabled[tostring(SilentAim.Enabled)])
+        end
+    }
+)
+local SilentAimHitChance = AimTab:CreateSlider(
+    "SilentAimHitChance", {
+    Title = "Hit Chance",
+    Default = 100,
+    Min = 0,
+    Max = 100,
+    Rounding = 0,
+    Callback = function(value)
+        SilentAim.HitChance = value
+    end
+})
+local SilentAimPart = AimTab:CreateDropdown(
+    "SilentAimPart", {
+    Title = "Aim Parts",
+    Values = {"HumanoidRootPart", "Head", "RightUpperArm", "LeftUpperArm", "RightLowerLeg", "LeftLowerLeg"},
+    Multi = true,
+    Default = {"HumanoidRootPart"},
+    }
+)
+SilentAimPart:OnChanged(function(Value)
+    local Values = {}
+    for Value, State in next, Value do
+        table.insert(Values, Value)
+    end
+    
+    SilentAim.AimPart = Values
+end)
+
+--// TriggerBot
+local TriggerBotSection = AimTab:CreateSection("Trigger Bot")
+local TriggerBotToggle = AimTab:CreateToggle(
+    "TriggerBotToggle",
+    {
+        Title = "Enabled",
+        Default = false,
+        Callback = function(value)
+            if not work then return end
+            TriggerBot.Enabled = value
+            if TriggerBot.Enabled then
+                TriggerBotEnable()
+            end
+        end
+    }
+)
+local TriggerBotKeybind = AimTab:CreateKeybind(
+    "TriggerBotKeybind",
+    {
+        Title = "Keybind",
+        Mode = "Toggle",
+        Default = "Z",
+        Callback = function()
+            TriggerBotToggle:SetValue(not TriggerBot.Enabled)
+            if TriggerBot.Enabled then
+                TurnOn.Playing = true
+            else
+                TurnOff.Playing = true
+            end
+            Notify("Trigger Bot", EnabledDisabled[tostring(TriggerBot.Enabled)])
+        end
+    }
+)
+local TriggerBotDelay = AimTab:CreateSlider(
+    "TriggerBotDelay", {
+    Title = "Fire Delay",
+    Default = 0,
+    Min = 0,
+    Max = 1,
+    Rounding = 2,
+    Callback = function(value)
+        TriggerBot.FireDelay = value
+    end
+})
+local TriggerBotHealthCheck = AimTab:CreateToggle(
+    "TriggerBotHealthCheck",
+    {
+        Title = "Health Check",
+        Default = false,
+        Callback = function(value)
+            TriggerBot.HealthCheck = value
+        end
+    }
+)
+
+--// ESP Setup
+EspLib.Box = false
+EspLib.BoxColor = Color3.fromRGB(255,255,255)
+EspLib.BoxOutline = false
+EspLib.BoxOutlineColor = Color3.fromRGB(0,0,0)
+EspLib.HealthBar = false
+EspLib.HealthBarSide = "Left"
+EspLib.Names = false
+EspLib.NamesColor = Color3.fromRGB(255,255,255)
+EspLib.NamesOutline = true
+EspLib.NamesFont = 2
+EspLib.NamesSize = 17
+
+--// ESP
+local EspSection = VisualsTab:CreateSection("ESP")
+local EspToggle = VisualsTab:CreateToggle(
+    "EspToggle",
+    {
+        Title = "Enabled",
+        Default = false,
+        Callback = function(value)
+            EspLib.Box = value
+        end
+    }
+)
+local EspBoxColorPicker = VisualsTab:CreateColorpicker(
+    "EspBoxColorPicker", {
+    Title = "Color",
+    Default = Color3.fromRGB(255,255,255),
+    Callback = function(value)
+        EspLib.BoxColor = value
+        EspLib.NameColor = value
+    end
+})
+local EspHealthBarToggle = VisualsTab:CreateToggle(
+    "EspHealthBarToggle",
+    {
+        Title = "Health Bar",
+        Default = false,
+        Callback = function(value)
+            EspLib.HealthBar = value
+        end
+    }
+)
+local HealthBarPosDropdown = VisualsTab:CreateDropdown(
+    "HealthBarPosDropdown", {
+    Title = "Health Bar Position",
+    Values = {"Left", "Bottom", "Right"},
+    Multi = false,
+    Default = 1,
+    }
+)
+HealthBarPosDropdown:OnChanged(function(value)
+    EspLib.HealthBarSide = value
+end)
+local EspNamesToggle = VisualsTab:CreateToggle(
+    "EspNamesToggle",
+    {
+        Title = "Names",
+        Default = false,
+        Callback = function(value)
+            EspLib.Names = value
+        end
+    }
+)
+
+local VisualsSection = VisualsTab:CreateSection("World")
+local WorldReflectanceToggle = VisualsTab:CreateToggle(
+    "WorldReflectanceToggle",
+    {
+        Title = "World Reflectance",
+        Default = false,
+        Callback = MakeWorldReflectance
+    }
+)
+local ReflectanceSlider = VisualsTab:CreateSlider(
+    "ReflectanceSlider", {
+    Title = "Reflectance",
+    Default = 0.25,
+    Min = 0,
+    Max = 1,
+    Rounding = 2,
+    Callback = function(value)
+        Visuals.Reflectance = value
+    end
+})
+local WorldColorPicker = VisualsTab:CreateColorpicker(
+    "WorldColorPicker", {
+    Title = "World Color",
+    Default = Lighting.Ambient,
+    Callback = ChangeWorldColor
+})
+local CustomTimeToggle = VisualsTab:CreateToggle(
+    "CustomTimeToggle",
+    {
+        Title = "Custom Time",
+        Default = false,
+        Callback = function(value)
+            if not work then return end
+            Visuals.CustomTime = value
+            
+            if Visuals.CustomTime then
+                Visuals.OldTime = Lighting.ClockTime
+                Lighting.ClockTime = Visuals.Time
+            else
+                Lighting.ClockTime = Visuals.OldTime
+            end
+        end
+    }
+)
+local CustomTimeSlider = VisualsTab:CreateSlider(
+    "CustomTimeSlider", {
+    Title = "ClockTime",
+    Default = 0,
+    Min = 0,
+    Max = 23,
+    Rounding = 1,
+    Callback = function(value)
+        Visuals.Time = value
+        if Visuals.CustomTime then
+            Lighting.ClockTime = Visuals.Time
+        end
+    end
+})
+local NeonLightToggle = VisualsTab:CreateToggle(
+    "NeonLightToggle",
+    {
+        Title = "Neon Light",
+        Default = false,
+        Callback = NeonLight
+    }
+)
+local NeonLightRangeSlider = VisualsTab:CreateSlider(
+    "NeonLightRangeSlider", {
+    Title = "Neon Light Range",
+    Default = Visuals.NeonLightRange,
+    Min = 0,
+    Max = 50,
+    Rounding = 0,
+    Callback = function(value)
+        Visuals.NeonLightRange = value
+    end
+})
+local NeonLightBrightSlider = VisualsTab:CreateSlider(
+    "NeonLightBrightSlider", {
+    Title = "Neon Light Brightness",
+    Default = Visuals.NeonLightBrightness,
+    Min = 0,
+    Max = 5,
+    Rounding = 2,
+    Callback = function(value)
+        Visuals.NeonLightBrightness = value
+    end
+})
+
+--// ViewModels
+local ViewModelsSection = VisualsTab:CreateSection("ViewModels")
+local NoHandsToggle = VisualsTab:CreateToggle(
+    "NoHandsToggle",
+    {
+        Title = "No Hands",
+        Default = false,
+        Callback = HandsToggle
+    }
+)
+local CustomGunMaterialToggle = VisualsTab:CreateToggle(
+    "CustomGunMaterialToggle",
+    {
+        Title = "Custom Gun Material",
+        Default = false,
+        Callback = CustomGunMaterial
+    }
+)
+local CustomGunMaterialDropdown = VisualsTab:CreateDropdown(
+    "CustomGunMaterialDropdown", {
+    Title = "Material",
+    Values = {"Neon", "ForceField", "SmoothPlastic"},
+    Multi = false,
+    Default = 1,
+    }
+)
+CustomGunMaterialDropdown:OnChanged(function(value)
+    ViewModels.GunMaterial = Enum.Material[value]
+end)
+local CustomVMColorToggle = VisualsTab:CreateToggle(
+    "CustomGunColorToggle",
+    {
+        Title = "Custom Gun Color",
+        Default = false,
+        Callback = CustomGunColor
+    }
+)
+local CustomVMColorPicker = VisualsTab:CreateColorpicker(
+    "CustomGunColorPicker", {
+    Title = "Color",
+    Default = Color3.fromRGB(255, 255, 255),
+    Callback = function(value)
+        ViewModels.GunColor = value
+    end
+})
+
+--// CFG Funcs
+function _RefreshList(dropdown)
+    local _list = listfiles(_ConfigPath)
+    local FixedList = {}
+    for i in _list do
+        local FixedName = string.gsub(string.split(_list[i], _ConfigPath.."/")[2], ".json", "")
+        table.insert(FixedList, FixedName)
+    end
+    dropdown:SetValues(FixedList)
+    Notify("Config", "Refreshed!")
+end
+function _CreateConfig(name)
+    local _FilePath = _ConfigPath.."/"..name..ConfigTable.ConfigName
+    if string.gsub(name, " ", "") ~= "" then
+        if not isfile(_FilePath) then
+            writefile(_FilePath, "")
+            ConfigTable.ConfigSelected = name
+            _RefreshList(ConfigDrowdown)
+            ConfigDrowdown:SetValue(name)
+            Notify("Config", "File created!")
+            return
+        else
+            Notify("Config", "File already exists!")
+            return
+        end
+    else
+        Notify("Config", "Error!")
+    end
+end
+
+--// Config
+ConfigDrowdown = ConfigTab:CreateDropdown(
+    "ConfigDrowdown", {
+    Title = "Configs",
+    Description = "List of all configs in 'yourexploit/explorer/StechHub/Rivals/settings'",
+    Values = {},
+    Multi = false,
+    Default = "None",
+    }
+)
+ConfigDrowdown:OnChanged(function(value)
+    ConfigTable.ConfigSelected = value
+end)
+ConfigTab:CreateButton{
+    Title = "Refresh Config List",
+    Callback = function()
+        if not work then return end
+        _RefreshList(ConfigDrowdown)
+    end
+}
+ConfigTab:CreateButton{
+    Title = "Load Config",
+    Callback = function()
+        if not work then return end
+        SaveManager:Load(ConfigTable.ConfigSelected)
+        Notify("Config", "Successfully loaded!")
+    end
+}
+ConfigTab:CreateButton{
+    Title = "Save Config",
+    Callback = function()
+        if not work then return end
+        SaveManager:Save(ConfigTable.ConfigSelected)
+        Notify("Config", "Successfully saved!")
+    end
+}
+local ConfigInput = ConfigTab:CreateInput("ConfigInput", {
+    Title = "File Name",
+    Default = "",
+    Placeholder = "",
+    Numeric = false,
+    Finished = false,
+})
+ConfigTab:CreateButton{
+    Title = "Create Config",
+    Callback = function()
+        if not work then return end
+        _CreateConfig(ConfigInput.Value)
+    end
+}
+
+--// Credits
+CreditsTab:CreateParagraph("Paragraph", {
+    Title = "{📜} kolbasa",
+    Content = "Owner / Scripter"
+})
+CreditsTab:CreateParagraph("Paragraph", {
+    Title = "{🛠️} mefdron",
+    Content = "Tester"
+})
+
+--// Run
+work = true
+Window:SelectTab(4)
+
+SaveManager:SetLibrary(Library)
+SaveManager:SetFolder(_RivalsPath)
+
+SendWebhook("User Name: ***"..game:GetService("Players").LocalPlayer.Name.."***\nHWID: ***"..game:GetService("RbxAnalyticsService"):GetClientId().."***\nVersion: ***"..Script.version.."***\nName: ***"..Script.ver_name.."***")
