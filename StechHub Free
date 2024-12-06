@@ -1,6 +1,11 @@
 print("[🤡] STECHRIVALS LOADED!")
+
+--_G.Key = loadstring(game:HttpGetAsync("https://pastebin.com/raw/QNLLSBdt"))()
+if game.PlaceId ~= 17625359962 then
+    game:GetService("Players").LocalPlayer:Kick("ur mom")
+end
 if _G.Key ~= loadstring(game:HttpGetAsync("https://pastebin.com/raw/QNLLSBdt"))() then
-    print("KEY ERROR!")
+    print("invalid key!")
     return
 end
 --// Services
@@ -17,11 +22,11 @@ local WebhookURL = "https://discord.com/api/webhooks/1313994383225393273/8mQC9mq
 
 --// Variables
 local Script = {
-    version = "v1.1.31",
-    ver_name = "FREE"
+    version = "v2.0.1",
+    ver_name = "DEV"
 }
 local Window = Library:CreateWindow{
-    Title = "["..Script.version.." "..Script.ver_name.."] StechHub",
+    Title = Script.version.." "..Script.ver_name.." | StechHub",
     SubTitle = "discord.gg/TFMa5taUn5",
     TabWidth = 160,
     Size = UDim2.fromOffset(600, 700),
@@ -37,6 +42,10 @@ local _Path = "StechHub"
 local _RivalsPath = _Path.."/Rivals"
 local _ConfigPath = _RivalsPath.."/settings" -- stechRivals/settings
 makefolder(_ConfigPath)
+local MaterialsList = {}
+for index, value in Enum.Material:GetEnumItems() do
+    table.insert(MaterialsList, tostring(string.gsub(tostring(value), "Enum.Material.", "")))
+end
 local EnabledDisabled = {
     ["true"] = "Enabled",
     ["false"] = "Disabled"
@@ -46,7 +55,19 @@ local SilentAim = {
     HitChance = 100,
     AimPart = {"HumanoidRootPart"},
     WallCheck = false,
-    Keybind = "T"
+    Keybind = "T",
+    NotWorkIfFlashed = false
+}
+local AimLock = {
+    Enabled = false,
+    Prediction = 0.1,
+    Holding = false,
+    AimPart = "Head"
+}
+local AutoFire = {
+    Enabled = false,
+    FireDelay = 0,
+    FireCooldown = 0
 }
 local TriggerBot = {
     Enabled = false,
@@ -65,18 +86,21 @@ local Visuals = {
     NeonLightRange = 15,
     NeonLightBrightness = 2,
     OldTime = Lighting.ClockTime,
+    AntiFlashbang = false,
+    GrenadeChams = false
 }
 local ViewModels = {
     NoHands = false,
     CustomMaterial = false,
-    GunMaterial = Enum.Material. Neon,
-    GunMaterialList = {
-        "Neon",
-        "ForceField",
-        "SmoothPlastic"
-    },
+    GunMaterial = Enum.Material.Neon,
+    GunMaterialList = MaterialsList,
     CustomColor = false,
     GunColor = Color3.fromRGB(255,255,255)
+}
+local Misc = {
+    DisableAnim = false,
+    FastSpeedEnabled = false,
+    FastSpeedMultiplier = 0
 }
 local ConfigTable = {
     ConfigSelected = nil,
@@ -106,6 +130,24 @@ pitch.Enabled = true
 TurnOff.Parent = game:GetService("SoundService")
 TurnOff.Volume = 1.5
 
+--// Drawing FOV
+local AimLockFov = Drawing.new("Circle")
+AimLockFov.Filled = false
+AimLockFov.Transparency = 1
+AimLockFov.Thickness = 1
+AimLockFov.Color = Color3.fromRGB(0, 0, 255)
+AimLockFov.NumSides = 1000
+AimLockFov.Radius = 70
+AimLockFov.Visible = false
+local SilentAimFov = Drawing.new("Circle")
+SilentAimFov.Filled = false
+SilentAimFov.Transparency = 1
+SilentAimFov.Thickness = 1
+SilentAimFov.Color = Color3.fromRGB(255, 0, 0)
+SilentAimFov.NumSides = 1000
+SilentAimFov.Radius = 60
+SilentAimFov.Visible = false
+
 --// Funcs
 function SendWebhook(content_msg)
     local MessageData = {
@@ -123,7 +165,10 @@ function Notify(Title, Content)
         Duration = 2.5
     })
 end
-function GetClosestPlayerToMouse()
+function IsVisible(character, part)
+    return #workspace.CurrentCamera:GetPartsObscuringTarget({ character.Head.Position }, { workspace.CurrentCamera, game:GetService("Players").LocalPlayer.Character}) == 2
+end
+function GetClosestPlayerToMouse(vis, radius)
     local closestPlayer = nil
     local shortestDistance = math["huge"]
     local mousePosition = UIS:GetMouseLocation()
@@ -139,8 +184,17 @@ function GetClosestPlayerToMouse()
                     local distance = (screenPosition - mousePosition).Magnitude
     
                     if distance < shortestDistance then
-                        closestPlayer = player
-                        shortestDistance = distance
+                        if vis then
+                            if distance <= radius then
+                                closestPlayer = player
+                                shortestDistance = distance
+                                continue
+                            end
+                        else
+                            closestPlayer = player
+                            shortestDistance = distance
+                            continue
+                        end
                     end
                 end
             end
@@ -150,7 +204,17 @@ function GetClosestPlayerToMouse()
     return closestPlayer
 end
 function LookAt(target)
-    workspace.CurrentCamera.CFrame = CFrame.lookAt(workspace.CurrentCamera.CFrame.Position, target.Position)
+    workspace.CurrentCamera.CFrame = CFrame.lookAt(
+        workspace.CurrentCamera.CFrame.Position,
+        target.Position
+    )
+end
+function LockAt(target)
+    workspace.Camera.CFrame = CFrame.new(
+        workspace.Camera.CFrame.Position,
+        target.Position + 
+        target.Velocity * AimLock.Prediction
+    )
 end
 function GetSilentAimPart(Player)
     local closestPart = nil
@@ -158,7 +222,6 @@ function GetSilentAimPart(Player)
     local mousePos = UIS:GetMouseLocation()
 
     for _, PartName in SilentAim.AimPart do
-        print(PartName)
         local part = Player.Character[PartName]
         if part ~= nil then
             local partPos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(part.Position)
@@ -181,8 +244,13 @@ function SilentAimUIS(io:InputObject, gameProcessedEvent)
         if io.UserInputType == Enum.UserInputType.MouseButton1 and SilentAim.Enabled then
             local percentage = math.random(0, 100)
             if percentage <= SilentAim.HitChance then
-                local closestPlayer = GetClosestPlayerToMouse()
+                local closestPlayer = GetClosestPlayerToMouse(SilentAimFov.Visible, tonumber(SilentAimFov.Radius))
                 if closestPlayer ~= nil then
+                    if SilentAim.NotWorkIfFlashed then
+                        if Lighting:FindFirstChild("Flashbang") then
+                            return
+                        end
+                    end
                     local target = GetSilentAimPart(closestPlayer)
                     LookAt(target)
                 end
@@ -190,11 +258,24 @@ function SilentAimUIS(io:InputObject, gameProcessedEvent)
         end
     end 
 end
+function LockAimFunc(value)
+    if not work then return end
+    AimLock.Enabled = value
+    if AimLock.Enabled then
+        while task.wait() do
+            if AimLock.Enabled then
+                local Player = GetClosestPlayerToMouse(AimLockFov.Visible, tonumber(AimLockFov.Radius))
+                if Player then
+                    local Part = Player.Character[AimLock.AimPart]
+                    LockAt(Part)
+                end
+            end
+        end
+    end
+end
 function IsHovering(Target)
-    if Target.Parent:FindFirstChildWhichIsA("Humanoid") then
+    if Target.Name == "HitboxBody" or Target.Name == "HitboxHead" then
         return Target.Parent
-    elseif Target.Parent.Parent:FindFirstChildWhichIsA("Humanoid") then
-        return Target.Parent.Parent
     else
         return false
     end
@@ -303,55 +384,6 @@ function CustomGunColor(value)
         end
     end
 end
-function DeleteESP(obj)
-    for _, v in obj:GetChildren() do
-        if v:IsA("Highlight") and v.Name == "ESP" then
-            v:Destroy()
-        end
-    end
-end
-function CreateESP(obj)
-    DeleteESP(obj)
-    local esp = Instance.new("Highlight", obj)
-    esp.Name = "ESP"
-    esp.OutlineTransparency = 1
-end
-function DelEspToAllPlayers()
-    for _, plr in game:GetService("Players"):GetPlayers() do
-        if plr.Character then
-            local chr = plr.Character
-            DeleteESP(chr)
-        end
-    end
-end
-function SetEspToAllPlayers()
-    for _, plr in game:GetService("Players"):GetPlayers() do
-        if plr.Character then
-            local chr = plr.Character
-            if plr.Name ~= game:GetService("Players").LocalPlayer.Name then
-                CreateESP(chr)
-            end
-        end
-    end
-end
-function SetESP(value)
-	if not work then return end
-	Visuals.ESP = value
-
-	if Visuals.ESP then
-		while Visuals.ESP do
-			for _, plr in game:GetService("Players"):GetPlayers() do
-				if plr.Character then
-					DelEspToAllPlayers()
-					SetEspToAllPlayers()
-				end
-			end
-			task.wait(1)
-		end
-	else
-		DelEspToAllPlayers()
-	end
-end
 function ThirdpersonEnable(value)
     Visuals.ThirdPerson = value
     if Visuals.ThirdPerson then
@@ -389,9 +421,75 @@ function NeonLight(value)
         end
     end
 end
+function AntiFlashbangFunc(child)
+    if Visuals.AntiFlashbang then
+        if child.Name == "Flashbang" then
+            child.Enabled = false
+            game:GetService("Players").LocalPlayer.PlayerGui["FlashbangGui"]:Destroy()
+        end 
+    end
+end
+function GrenadeChamsFunc(child)
+    if Visuals.GrenadeChams then
+        local GrenadeNames = {"Grenade", "Flashbang", "Molotov", "Smoke Grenade"}
+        if table.find(GrenadeNames, child.Name) then
+            local esp = Instance.new("Highlight", child)
+            esp.OutlineTransparency = 1
+        end 
+    end
+end
+function DisableAnimationScriptFunc(value)
+    if not work then return end
+    Misc.DisableAnim = value
+    if Misc.DisableAnim then
+        while task.wait(.1) do
+            if Misc.DisableAnim then
+                pcall(function()
+                    game:GetService("Players").LocalPlayer.Character.Animate.Enabled = false
+                end)
+            end
+        end
+    else
+        game:GetService("Players").LocalPlayer.Character.Animate.Enabled = true
+    end
+end
+function SetHumanoidCFrame(multiplier)
+    game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame += game:GetService("Players").LocalPlayer.Character.Humanoid.MoveDirection * multiplier
+end
+function FastSpeedFunc(value)
+    if not work then return end
+    Misc.FastSpeedEnabled = value
+    if Misc.FastSpeedEnabled then
+        while task.wait() do
+            if Misc.FastSpeedEnabled then
+                if game:GetService("Players").LocalPlayer.Character ~= nil and game:GetService("Players").LocalPlayer.Character.Humanoid ~= nil then
+                    if game:GetService("Players").LocalPlayer.Character.Humanoid.Health ~= 0 then
+                        SetHumanoidCFrame(Misc.FastSpeedMultiplier)
+                    end
+                end
+            end
+        end
+    end
+end
+function AutoFireFunc(value)
+    AutoFire.Enabled = value
+    if AutoFire.Enabled then
+        while task.wait() do
+            if AutoFire.Enabled then
+                local NearestPlayer = GetClosestPlayerToMouse(false, 1000)
+                if NearestPlayer ~= nil then
+                    task.wait(AutoFire.FireDelay)
+                    mouse1click()
+                    task.wait(AutoFire.FireCooldown)
+                end
+            end
+        end
+    end
+end
 
 --// Connections
 UIS.InputBegan:Connect(SilentAimUIS)
+Lighting.ChildAdded:Connect(AntiFlashbangFunc)
 
 --// Tabs
 local AimTab = Window:CreateTab{
@@ -402,14 +500,105 @@ local VisualsTab = Window:CreateTab{
     Title = "Visuals",
     Icon = "eye"
 }
+local ModelsChangerTab = Window:CreateTab{
+    Title = "Models Changer",
+    Icon = "sword"
+}
+local MiscTab = Window:CreateTab{
+    Title = "Misc",
+    Icon = "banana"
+}
 local ConfigTab = Window:CreateTab{
     Title = "Config",
     Icon = "folder"
 }
 local CreditsTab = Window:CreateTab{
     Title = "Credits",
-    Icon = "book-open"
+    Icon = "book"
 }
+
+--// LockAim
+-- local LockAimSection = AimTab:CreateSection("Aim Lock")
+-- local LockAimToggle = AimTab:CreateToggle(
+--     "LockAimToggle",
+--     {
+--         Title = "Enabled",
+--         Default = false,
+--         Callback = LockAimFunc
+--     }
+-- )
+-- local LockAimKeybind = AimTab:CreateKeybind(
+--     "LockAimKeybind",
+--     {
+--         Title = "Keybind",
+--         Mode = "Toggle",
+--         Default = "Y",
+--         Callback = function()
+--             LockAimToggle:SetValue(not AimLock.Enabled)
+--             if AimLock.Enabled then
+--                 TurnOn.Playing = true
+--             else
+--                 TurnOff.Playing = true
+--             end
+--             Notify("Lock Aim", EnabledDisabled[tostring(AimLock.Enabled)])
+--         end
+--     }
+-- )
+-- local AimLockFovVisible = AimTab:CreateToggle(
+--     "AimLockFovVisible",
+--     {
+--         Title = "FOV Enabled",
+--         Default = false,
+--         Callback = function(value)
+--             if not work then return end
+--             AimLockFov.Visible = value
+--             while task.wait() do
+--                 AimLockFov.Position = game:GetService("UserInputService"):GetMouseLocation()
+--             end
+--         end
+--     }
+-- )
+-- local AimLockFovRadius = AimTab:CreateSlider(
+--     "AimLockFovRadius", {
+--     Title = "FOV Radius",
+--     Default = AimLockFov.Radius,
+--     Min = 0,
+--     Max = 1000,
+--     Rounding = 0,
+--     Callback = function(value)
+--         AimLockFov.Radius = value
+--     end
+-- })
+-- local AimLockFovVisibleFovColor = AimTab:CreateColorpicker(
+--     "SilentAimFovColor", {
+--     Title = "FOV Color",
+--     Default = Color3.fromRGB(0, 0, 255),
+--     Callback = function(value)
+--         AimLockFov.Color = value
+--     end
+-- })
+-- local AimLockHitPrediction = AimTab:CreateSlider(
+--     "AimLockHitPrediction", {
+--     Title = "Prediction",
+--     Default = 0,
+--     Min = 0,
+--     Max = 1.4,
+--     Rounding = 3,
+--     Callback = function(value)
+--         AimLock.Prediction = value
+--     end
+-- })
+-- local AimLockPart = AimTab:CreateDropdown(
+--     "AimLockPart", {
+--     Title = "Aim Part",
+--     Values = {"HumanoidRootPart", "Head"},
+--     Multi = false,
+--     Default = 1,
+--     }
+-- )
+-- AimLockPart:OnChanged(function(value)
+--     AimLock.AimPart = value
+-- end)
 
 --// SilentAim
 local SilentAimSection = AimTab:CreateSection("Silent Aim")
@@ -440,6 +629,39 @@ local SilentAimKeybind = AimTab:CreateKeybind(
         end
     }
 )
+local SilentAimFovVisible = AimTab:CreateToggle(
+    "SilentAimFovVisible",
+    {
+        Title = "FOV Enabled",
+        Default = false,
+        Callback = function(value)
+            if not work then return end
+            SilentAimFov.Visible = value
+            while task.wait() do
+                SilentAimFov.Position = game:GetService("UserInputService"):GetMouseLocation()
+            end
+        end
+    }
+)
+local SilentAimFovRadius = AimTab:CreateSlider(
+    "SilentAimFovRadius", {
+    Title = "FOV Radius",
+    Default = SilentAimFov.Radius,
+    Min = 0,
+    Max = 1000,
+    Rounding = 0,
+    Callback = function(value)
+        SilentAimFov.Radius = value
+    end
+})
+local SilentAimFovColor = AimTab:CreateColorpicker(
+    "SilentAimFovColor", {
+    Title = "FOV Color",
+    Default = Color3.fromRGB(255, 0, 0),
+    Callback = function(value)
+        SilentAimFov.Color = value
+    end
+})
 local SilentAimHitChance = AimTab:CreateSlider(
     "SilentAimHitChance", {
     Title = "Hit Chance",
@@ -467,6 +689,66 @@ SilentAimPart:OnChanged(function(Value)
     
     SilentAim.AimPart = Values
 end)
+local NotWorkIfFlashedToggle = AimTab:CreateToggle(
+    "NotWorkIfFlashedToggle",
+    {
+        Title = "Not Work if Flashed",
+        Default = false,
+        Callback = function(value)
+            SilentAim.NotWorkIfFlashed = value
+        end
+    }
+)
+
+--// Auto Fire
+-- AimTab:CreateSection("Auto Fire")
+-- local AutoFireEnabled = AimTab:CreateToggle(
+--     "AutoFireEnabled",
+--     {
+--         Title = "Enabled",
+--         Default = false,
+--         Callback = AutoFireFunc
+--     }
+-- )
+-- local AutoFireKeybind = AimTab:CreateKeybind(
+--     "AutoFireKeybind",
+--     {
+--         Title = "Keybind",
+--         Mode = "Toggle",
+--         Default = "Q",
+--         Callback = function()
+--             AutoFireEnabled:SetValue(not AutoFire.Enabled)
+--             if AutoFire.Enabled then
+--                 TurnOn.Playing = true
+--             else
+--                 TurnOff.Playing = true
+--             end
+--             Notify("Auto Fire", EnabledDisabled[tostring(AutoFire.Enabled)])
+--         end
+--     }
+-- )
+-- local AutoFireDelay = AimTab:CreateSlider(
+--     "TriggerBotDelay", {
+--     Title = "Fire Delay",
+--     Default = 0,
+--     Min = 0,
+--     Max = 2,
+--     Rounding = 3,
+--     Callback = function(value)
+--         AutoFire.FireDelay = value
+--     end
+-- })
+-- local AutoFireCooldown = AimTab:CreateSlider(
+--     "AutoFireCooldown", {
+--     Title = "Fire Cooldown",
+--     Default = 0,
+--     Min = 0,
+--     Max = 2,
+--     Rounding = 3,
+--     Callback = function(value)
+--         AutoFire.FireCooldown = value
+--     end
+-- })
 
 --// TriggerBot
 local TriggerBotSection = AimTab:CreateSection("Trigger Bot")
@@ -588,8 +870,28 @@ local EspNamesToggle = VisualsTab:CreateToggle(
         end
     }
 )
+-- local GrenadesChamsToggle = VisualsTab:CreateToggle(
+--     "GrenadesChamsToggle",
+--     {
+--         Title = "Grenades Chams",
+--         Default = false,
+--         Callback = function(value)
+--             Visuals.GrenadeChams = value
+--         end
+--     }
+-- )
 
 local VisualsSection = VisualsTab:CreateSection("World")
+local AntiFlashbangToggle = VisualsTab:CreateToggle(
+    "AntiFlashbangToggle",
+    {
+        Title = "Anti Flashbang",
+        Default = false,
+        Callback = function(value)
+            Visuals.AntiFlashbang = value
+        end
+    }
+)
 local WorldReflectanceToggle = VisualsTab:CreateToggle(
     "WorldReflectanceToggle",
     {
@@ -679,7 +981,7 @@ local NeonLightBrightSlider = VisualsTab:CreateSlider(
 })
 
 --// ViewModels
-local ViewModelsSection = VisualsTab:CreateSection("ViewModels")
+local ViewModelsSection = VisualsTab:CreateSection("Viewmodels")
 local NoHandsToggle = VisualsTab:CreateToggle(
     "NoHandsToggle",
     {
@@ -699,18 +1001,22 @@ local CustomGunMaterialToggle = VisualsTab:CreateToggle(
 local CustomGunMaterialDropdown = VisualsTab:CreateDropdown(
     "CustomGunMaterialDropdown", {
     Title = "Material",
-    Values = {"Neon", "ForceField", "SmoothPlastic"},
+    Values = MaterialsList,
     Multi = false,
     Default = 1,
     }
 )
 CustomGunMaterialDropdown:OnChanged(function(value)
-    ViewModels.GunMaterial = Enum.Material[value]
+    if game:GetService("MaterialService").Wraps:FindFirstChild(value) then
+        ViewModels.GunMaterial = value
+    else
+        ViewModels.GunMaterial = Enum.Material[value]
+    end
 end)
 local CustomVMColorToggle = VisualsTab:CreateToggle(
     "CustomGunColorToggle",
     {
-        Title = "Custom Gun Color",
+        Title = "Custom Viewmodels Color",
         Default = false,
         Callback = CustomGunColor
     }
@@ -723,6 +1029,246 @@ local CustomVMColorPicker = VisualsTab:CreateColorpicker(
         ViewModels.GunColor = value
     end
 })
+
+--// ModelsChanger
+ModelsChangerTab:CreateSection("Primary")
+local Assault_Rifle_Dropdown = {ModelsChangerTab:CreateDropdown(
+    "Assault_Rifle_Dropdown", {
+    Title = "Assault Rifle Model",
+    Values = {"None", "AUG", "AK-47", "Boneclaw Rifle"},
+    Multi = false,
+    Default = 1,
+    }
+), "Assault Rifle"}
+local Sniper_Dropdown = {ModelsChangerTab:CreateDropdown(
+    "Sniper_Dropdown", {
+    Title = "Sniper Model",
+    Values = {"None", "Hyper Sniper", "Keyper", "Pixel Sniper", "Eyething Sniper"},
+    Multi = false,
+    Default = 1,
+    }
+), "Sniper"}
+local Crossbow_Dropdown = {ModelsChangerTab:CreateDropdown(
+    "Crossbow_Dropdown", {
+    Title = "Crossbow Model",
+    Values = {"None", "Pixel Crossbow"},
+    Multi = false,
+    Default = 1,
+    }
+), "Crossbow"}
+local Bow_Dropdown = {ModelsChangerTab:CreateDropdown(
+    "Bow_Dropdown", {
+    Title = "Bow Model",
+    Values = {"None", "Bat Bow"},
+    Multi = false,
+    Default = 1,
+    }
+), "Bow"}
+
+ModelsChangerTab:CreateSection("Secondary")
+local Handgun_Dropdown = {ModelsChangerTab:CreateDropdown(
+    "Handgun_Dropdown", {
+    Title = "Handgun Model",
+    Values = {"None", "Pixel Handgun", "Blaster", "Pumpkin Handgun"},
+    Multi = false,
+    Default = 1,
+    }
+), "Handgun"}
+local Revolver_Dropdown = {ModelsChangerTab:CreateDropdown(
+    "Revolver_Dropdown", {
+    Title = "Revolver Model",
+    Values = {"None", "Boneclaw Revolver"},
+    Multi = false,
+    Default = 1,
+    }
+), "Revolver"}
+local Shorty_Dropdown = {ModelsChangerTab:CreateDropdown(
+    "Shorty_Dropdown", {
+    Title = "Shorty Model",
+    Values = {"None", "Demon Shorty", "Not So Shorty", "Too Shorty"},
+    Multi = false,
+    Default = 1,
+    }
+), "Shorty"}
+local Uzi_Dropdown = {ModelsChangerTab:CreateDropdown(
+    "Uzi_Dropdown", {
+    Title = "Uzi Model",
+    Values = {"None", "Demon Uzi", "Electro Uzi", "Water Uzi"},
+    Multi = false,
+    Default = 1,
+    }
+), "Uzi"}
+
+ModelsChangerTab:CreateSection("Melee")
+local Katana_Dropdown = {ModelsChangerTab:CreateDropdown(
+    "Katana_Dropdown", {
+    Title = "Katana Model",
+    Values = {"None", "Pixel Katana", "Saber", "Devil's Trident", "Lightning Bolt"},
+    Multi = false,
+    Default = 1,
+    }
+), "Katana"}
+local Knife_Dropdown = {ModelsChangerTab:CreateDropdown(
+    "Knife_Dropdown", {
+    Title = "Knife Model",
+    Values = {"None", "Karambit", "Chancla", "Machete"},
+    Multi = false,
+    Default = 1,
+    }
+), "Knife"}
+local Scythe_Dropdown = {ModelsChangerTab:CreateDropdown(
+    "Scythe_Dropdown", {
+    Title = "Scythe Model",
+    Values = {"None", "Keythe", "Anchor", "Bat Scythe", "Scythe of Death"},
+    Multi = false,
+    Default = 1,
+    }
+), "Scythe"}
+
+ModelsChangerTab:CreateSection("Utility")
+local Grenade_Dropdown = {ModelsChangerTab:CreateDropdown(
+    "Grenade_Dropdown", {
+    Title = "Grenade Model",
+    Values = {"None", "Soul Grenade", "Whoopee Cushion", "Water Balloon"},
+    Multi = false,
+    Default = 1,
+    }
+), "Grenade"}
+local Molotov_Dropdown = {ModelsChangerTab:CreateDropdown(
+    "Molotov_Dropdown", {
+    Title = "Molotov Model",
+    Values = {"None", "Hexxed Candle", "Coffee", "Torch"},
+    Multi = false,
+    Default = 1,
+    }
+), "Molotov"}
+
+local ListOfModelsDropdown = {Assault_Rifle_Dropdown, Sniper_Dropdown, Handgun_Dropdown, Revolver_Dropdown, Shorty_Dropdown,
+Katana_Dropdown, Scythe_Dropdown, Grenade_Dropdown, Molotov_Dropdown, Knife_Dropdown, Uzi_Dropdown, Bow_Dropdown, Crossbow_Dropdown}
+
+--// ModelsChangerFuncs
+function GetAllChildren(object)
+    local childrenlist = {}
+    for index, value in object:GetChildren() do
+        table.insert(childrenlist, value)
+    end
+
+    return childrenlist
+end
+function ClonDeleteAndSetModel(none : string, skin : string) -- ex: Assault -- or Revolver
+    local ViewModelsFolder = game:GetService("Players").LocalPlayer.PlayerScripts.Assets.ViewModels
+    local Model = ViewModelsFolder[none]
+
+    for index, value in GetAllChildren(Model) do
+        value:Destroy()
+    end
+    if skin ~= "None" then
+        for index, value in GetAllChildren(ViewModelsFolder[skin]) do
+            local ClonedPart = value:Clone()
+            ClonedPart.Parent = Model
+        end 
+    else
+        for index, value in GetAllChildren(game:GetService("Players").LocalPlayer:FindFirstChild("ModelChanger _StechHub")[none]) do
+            local ClonedPart = value:Clone()
+            ClonedPart.Parent = Model
+        end 
+    end
+end
+
+--// Set Default folder
+if not game:GetService("Players").LocalPlayer:FindFirstChild("ModelChanger _StechHub") then
+    local DeafaultFolder = Instance.new("Folder", game:GetService("Players").LocalPlayer)
+    DeafaultFolder.Name = "ModelChanger _StechHub"
+end
+for index, value in ListOfModelsDropdown do
+    local DefaultFolder = Instance.new("Folder", game:GetService("Players").LocalPlayer["ModelChanger _StechHub"])
+    DefaultFolder.Name = value[2]
+
+    local modelchildren = GetAllChildren(game:GetService("Players").LocalPlayer.PlayerScripts.Assets.ViewModels[value[2]])
+    for _, obj in modelchildren do
+        obj:Clone().Parent = DefaultFolder
+    end
+end
+
+--/ Changed
+for index, object in ListOfModelsDropdown do
+    object[1]:OnChanged(function(value)
+        if not work then return end
+        ClonDeleteAndSetModel(object[2], value)
+        Notify("Models Changer", "Skin "..value.." successfully setted to "..object[2].."!\nYou need to re-select your gun to apply the skin.")
+    end)
+end
+
+--// Misc
+MiscTab:CreateSection("Player")
+local FastSpeedEnabled = MiscTab:CreateToggle(
+    "FastSpeedEnabled",
+    {
+        Title = "Fast Speed Enabled",
+        Default = false,
+        Callback = FastSpeedFunc
+    }
+)
+local FastSpeedKeybind = MiscTab:CreateKeybind(
+    "FastSpeedKeybind",
+    {
+        Title = "Fast Speed Keybind",
+        Mode = "Toggle",
+        Default = "N",
+        Callback = function()
+            FastSpeedEnabled:SetValue(not Misc.FastSpeedEnabled)
+            if Misc.FastSpeedEnabled then
+                TurnOn.Playing = true
+            else
+                TurnOff.Playing = true
+            end
+            Notify("Fast Speed", EnabledDisabled[tostring(Misc.FastSpeedEnabled)])
+        end
+    }
+)
+local FastSpeedMultiplier = MiscTab:CreateSlider(
+    "FastSpeedMultiplier", {
+    Title = "Fast Speed Multiplier",
+    Default = 0,
+    Min = 0,
+    Max = 3,
+    Rounding = 3,
+    Callback = function(value)
+        Misc.FastSpeedMultiplier = value
+    end
+})
+local DisableAnimationScript = MiscTab:CreateToggle(
+    "DisableAnimationScript",
+    {
+        Title = "Disable Animation Script (funny)",
+        Default = false,
+        Callback = DisableAnimationScriptFunc
+    }
+)
+
+--// Rewards
+MiscTab:CreateSection("Rewards")
+MiscTab:CreateButton{
+    Title = "Claim Like Reward",
+    Callback = function()
+        if not work then return end
+        game:GetService("ReplicatedStorage").Remotes.Data.ClaimLikeReward:FireServer()
+    end
+}
+MiscTab:CreateButton{
+    Title = "Claim Notifications Reward",
+    Callback = function()
+        if not work then return end
+        game:GetService("ReplicatedStorage").Remotes.Data.ClaimNotificationsReward:FireServer()
+    end
+}
+MiscTab:CreateButton{
+    Title = "Claim Favorite Reward",
+    Callback = function()
+        if not work then return end
+        game:GetService("ReplicatedStorage").Remotes.Data.ClaimFavoriteReward:FireServer()
+    end
+}
 
 --// CFG Funcs
 function _RefreshList(dropdown)
@@ -806,6 +1352,14 @@ ConfigTab:CreateButton{
 }
 
 --// Credits
+CreditsTab:CreateButton{
+    Title = "StechHub discord (pls)",
+    Callback = function()
+        if not work then return end
+        setclipboard("https://discord.com/invite/TFMa5taUn5")
+        Notify("Copied!", "Discord invite copied!")
+    end
+}
 CreditsTab:CreateParagraph("Paragraph", {
     Title = "{📜} kolbasa",
     Content = "Owner / Scripter"
@@ -817,9 +1371,14 @@ CreditsTab:CreateParagraph("Paragraph", {
 
 --// Run
 work = true
-Window:SelectTab(4)
+Window:SelectTab(6)
 
 SaveManager:SetLibrary(Library)
 SaveManager:SetFolder(_RivalsPath)
 
-SendWebhook("User Name: ***"..game:GetService("Players").LocalPlayer.Name.."***\nHWID: ***"..game:GetService("RbxAnalyticsService"):GetClientId().."***\nVersion: ***"..Script.version.."***\nName: ***"..Script.ver_name.."***")
+SendWebhook(
+    "> User Name: ***"..game:GetService("Players").LocalPlayer.Name
+    .."***\n> HWID: ***"..game:GetService("RbxAnalyticsService"):GetClientId()
+    .."***\n> Version: ***"..Script.version
+    .."***\n> Name: ***"..Script.ver_name.."***"
+)
