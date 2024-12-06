@@ -23,7 +23,7 @@ local WebhookURL = "https://discord.com/api/webhooks/1313994383225393273/8mQC9mq
 --// Variables
 local Script = {
     version = "v2.0.1",
-    ver_name = "DEV"
+    ver_name = "FREE"
 }
 local Window = Library:CreateWindow{
     Title = Script.version.." "..Script.ver_name.." | StechHub",
