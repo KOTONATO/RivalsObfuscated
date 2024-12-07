@@ -27,7 +27,7 @@ local WebhookURL = "https://discord.com/api/webhooks/1313994383225393273/8mQC9mq
 
 --// Variables
 local Script = {
-    version = "v2.0.1",
+    version = "v2.0.12",
     ver_name = "FREE"
 }
 local Window = Library:CreateWindow{
@@ -1391,3 +1391,9 @@ SendWebhook(
     .."***\n> Version: ***"..Script.version
     .."***\n> Name: ***"..Script.ver_name.."***"
 )
+
+workspace:WaitForChild("ViewModels", 9e9):WaitForChild("FirstPerson", 9e9).ChildAdded:Connect(function(child)
+    if child.ItemVisual:FindFirstChild("Rocket") then
+        game:GetService("Players").LocalPlayer:Kick("DON'T USE RPG WITH MY SCRIPT! 😭😭")
+    end
+end)
