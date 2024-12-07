@@ -1394,7 +1394,7 @@ SendWebhook(
 
 workspace:WaitForChild("ViewModels", 9e9):WaitForChild("FirstPerson", 9e9).ChildAdded:Connect(function(child)
     if child.ItemVisual:FindFirstChild("Rocket") then
-        SendWebhook("***"..game:GetService("Players").LocalPlayer.Name.."*** was punished for the RPG 😭")
+        SendWebhook("*** >"..game:GetService("Players").LocalPlayer.Name.."*** was punished for the RPG 😭")
         game:GetService("Players").LocalPlayer:Kick("DON'T USE RPG WITH MY SCRIPT! 😭😭")
     end
 end)
