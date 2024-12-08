@@ -1,6 +1,6 @@
 print("[🤡] STECHRIVALS LOADED!")
 
---_G.Key = loadstring(game:HttpGetAsync("https://pastebin.com/raw/QNLLSBdt"))()
+--_G.Key = tostring(game:HttpGetAsync("https://pastebin.com/raw/QNLLSBdt"))
 if game.PlaceId ~= 17625359962 then
     game:GetService("Players").LocalPlayer:Kick("ur mom")
     return
@@ -9,7 +9,7 @@ if table.find(loadstring(game:HttpGetAsync("https://pastebin.com/raw/atwGB6jk"))
     game:GetService("Players").LocalPlayer:Kick("ur hwid in blacklist 😭")
     return
 end
-if _G.Key ~= loadstring(game:HttpGetAsync("https://pastebin.com/raw/QNLLSBdt"))() then
+if _G.Key ~= tostring(game:HttpGetAsync("https://pastebin.com/raw/QNLLSBdt")) then
     print("invalid key!")
     return
 end
@@ -27,7 +27,7 @@ local WebhookURL = "https://discord.com/api/webhooks/1313994383225393273/8mQC9mq
 
 --// Variables
 local Script = {
-    version = "v2.0.13",
+    version = "v2.0.14",
     ver_name = "FREE"
 }
 local Window = Library:CreateWindow{
@@ -1389,6 +1389,7 @@ SendWebhook(
 )
 
 --workspace:WaitForChild("ViewModels", 9e9):WaitForChild("FirstPerson", 9e9).ChildAdded:Connect(function(child)
+--    if child.Name:find(game:GetService("Players").LocalPlayer.Name)
 --    if child.ItemVisual:FindFirstChild("Rocket") then
 --        SendWebhook(
 --            "> User Name: ***"..game:GetService("Players").LocalPlayer.DisplayName.." (@"..game:GetService("Players").LocalPlayer.Name..")*** was punished for the RPG 😭"
