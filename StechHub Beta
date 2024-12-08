@@ -24,11 +24,11 @@ local WebhookURL = "https://discord.com/api/webhooks/1313994383225393273/8mQC9mq
 
 --// Variables
 local Script = {
-    version = "v2.0.1",
+    version = "v2.0.12",
     ver_name = "BETA"
 }
 local Window = Library:CreateWindow{
-    Title = "["..Script.version.." "..Script.ver_name.."] StechHub",
+    Title = Script.version.." "..Script.ver_name.." | StechHub",
     SubTitle = "discord.gg/TFMa5taUn5",
     TabWidth = 160,
     Size = UDim2.fromOffset(600, 700),
@@ -36,7 +36,7 @@ local Window = Library:CreateWindow{
     MinSize = Vector2.new(300, 350),
     Acrylic = false,
     Theme = "Vynixu",
-    MinimizeKey = Enum.KeyCode.Insert
+    MinimizeKey = Enum.KeyCode.RightShift
 }
 
 local work = false
@@ -65,6 +65,11 @@ local AimLock = {
     Prediction = 0.1,
     Holding = false,
     AimPart = "Head"
+}
+local AutoFire = {
+    Enabled = false,
+    FireDelay = 0,
+    FireCooldown = 0
 }
 local TriggerBot = {
     Enabled = false,
@@ -95,7 +100,9 @@ local ViewModels = {
     GunColor = Color3.fromRGB(255,255,255)
 }
 local Misc = {
-    DisableAnim = false
+    DisableAnim = false,
+    FastSpeedEnabled = false,
+    FastSpeedMultiplier = 0
 }
 local ConfigTable = {
     ConfigSelected = nil,
@@ -159,6 +166,9 @@ function Notify(Title, Content)
         Content = Content,
         Duration = 2.5
     })
+end
+function IsVisible(character, part)
+    return #workspace.CurrentCamera:GetPartsObscuringTarget({ character.Head.Position }, { workspace.CurrentCamera, game:GetService("Players").LocalPlayer.Character}) == 2
 end
 function GetClosestPlayerToMouse(vis, radius)
     local closestPlayer = nil
@@ -266,10 +276,8 @@ function LockAimFunc(value)
     end
 end
 function IsHovering(Target)
-    if Target.Parent:FindFirstChildWhichIsA("Humanoid") then
+    if Target.Name == "HitboxBody" or Target.Name == "HitboxHead" then
         return Target.Parent
-    elseif Target.Parent.Parent:FindFirstChildWhichIsA("Humanoid") then
-        return Target.Parent.Parent
     else
         return false
     end
@@ -445,6 +453,39 @@ function DisableAnimationScriptFunc(value)
         end
     else
         game:GetService("Players").LocalPlayer.Character.Animate.Enabled = true
+    end
+end
+function SetHumanoidCFrame(multiplier)
+    game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame += game:GetService("Players").LocalPlayer.Character.Humanoid.MoveDirection * multiplier
+end
+function FastSpeedFunc(value)
+    if not work then return end
+    Misc.FastSpeedEnabled = value
+    if Misc.FastSpeedEnabled then
+        while task.wait() do
+            if Misc.FastSpeedEnabled then
+                if game:GetService("Players").LocalPlayer.Character ~= nil and game:GetService("Players").LocalPlayer.Character.Humanoid ~= nil then
+                    if game:GetService("Players").LocalPlayer.Character.Humanoid.Health ~= 0 then
+                        SetHumanoidCFrame(Misc.FastSpeedMultiplier)
+                    end
+                end
+            end
+        end
+    end
+end
+function AutoFireFunc(value)
+    AutoFire.Enabled = value
+    if AutoFire.Enabled then
+        while task.wait() do
+            if AutoFire.Enabled then
+                local NearestPlayer = GetClosestPlayerToMouse(false, 1000)
+                if NearestPlayer ~= nil then
+                    task.wait(AutoFire.FireDelay)
+                    mouse1click()
+                    task.wait(AutoFire.FireCooldown)
+                end
+            end
+        end
     end
 end
 
@@ -660,6 +701,56 @@ local NotWorkIfFlashedToggle = AimTab:CreateToggle(
         end
     }
 )
+
+--// Auto Fire
+-- AimTab:CreateSection("Auto Fire")
+-- local AutoFireEnabled = AimTab:CreateToggle(
+--     "AutoFireEnabled",
+--     {
+--         Title = "Enabled",
+--         Default = false,
+--         Callback = AutoFireFunc
+--     }
+-- )
+-- local AutoFireKeybind = AimTab:CreateKeybind(
+--     "AutoFireKeybind",
+--     {
+--         Title = "Keybind",
+--         Mode = "Toggle",
+--         Default = "Q",
+--         Callback = function()
+--             AutoFireEnabled:SetValue(not AutoFire.Enabled)
+--             if AutoFire.Enabled then
+--                 TurnOn.Playing = true
+--             else
+--                 TurnOff.Playing = true
+--             end
+--             Notify("Auto Fire", EnabledDisabled[tostring(AutoFire.Enabled)])
+--         end
+--     }
+-- )
+-- local AutoFireDelay = AimTab:CreateSlider(
+--     "TriggerBotDelay", {
+--     Title = "Fire Delay",
+--     Default = 0,
+--     Min = 0,
+--     Max = 2,
+--     Rounding = 3,
+--     Callback = function(value)
+--         AutoFire.FireDelay = value
+--     end
+-- })
+-- local AutoFireCooldown = AimTab:CreateSlider(
+--     "AutoFireCooldown", {
+--     Title = "Fire Cooldown",
+--     Default = 0,
+--     Min = 0,
+--     Max = 2,
+--     Rounding = 3,
+--     Callback = function(value)
+--         AutoFire.FireCooldown = value
+--     end
+-- })
 
 --// TriggerBot
 local TriggerBotSection = AimTab:CreateSection("Trigger Bot")
@@ -1112,6 +1203,42 @@ end
 
 --// Misc
 MiscTab:CreateSection("Player")
+local FastSpeedEnabled = MiscTab:CreateToggle(
+    "FastSpeedEnabled",
+    {
+        Title = "Fast Speed Enabled",
+        Default = false,
+        Callback = FastSpeedFunc
+    }
+)
+local FastSpeedKeybind = MiscTab:CreateKeybind(
+    "FastSpeedKeybind",
+    {
+        Title = "Fast Speed Keybind",
+        Mode = "Toggle",
+        Default = "N",
+        Callback = function()
+            FastSpeedEnabled:SetValue(not Misc.FastSpeedEnabled)
+            if Misc.FastSpeedEnabled then
+                TurnOn.Playing = true
+            else
+                TurnOff.Playing = true
+            end
+            Notify("Fast Speed", EnabledDisabled[tostring(Misc.FastSpeedEnabled)])
+        end
+    }
+)
+local FastSpeedMultiplier = MiscTab:CreateSlider(
+    "FastSpeedMultiplier", {
+    Title = "Fast Speed Multiplier",
+    Default = 0,
+    Min = 0,
+    Max = 3,
+    Rounding = 3,
+    Callback = function(value)
+        Misc.FastSpeedMultiplier = value
+    end
+})
 local DisableAnimationScript = MiscTab:CreateToggle(
     "DisableAnimationScript",
     {
@@ -1120,8 +1247,6 @@ local DisableAnimationScript = MiscTab:CreateToggle(
         Callback = DisableAnimationScriptFunc
     }
 )
-
---// Chat
 
 --// Rewards
 MiscTab:CreateSection("Rewards")
@@ -1242,7 +1367,7 @@ CreditsTab:CreateParagraph("Paragraph", {
     Content = "Owner / Scripter"
 })
 CreditsTab:CreateParagraph("Paragraph", {
-    Title = "{🛠️} mefdron",
+    Title = "{🛠️} mefdron, ilayah",
     Content = "Tester"
 })
 
@@ -1254,8 +1379,19 @@ SaveManager:SetLibrary(Library)
 SaveManager:SetFolder(_RivalsPath)
 
 SendWebhook(
-    "> User Name: ***"..game:GetService("Players").LocalPlayer.Name
+    "> User Name: ***"..game:GetService("Players").LocalPlayer.DisplayName.." (@"..game:GetService("Players").LocalPlayer.Name..")"
     .."***\n> HWID: ***"..game:GetService("RbxAnalyticsService"):GetClientId()
     .."***\n> Version: ***"..Script.version
     .."***\n> Name: ***"..Script.ver_name.."***"
 )
+
+--workspace:WaitForChild("ViewModels", 9e9):WaitForChild("FirstPerson", 9e9).ChildAdded:Connect(function(child)
+--    if child.Name:find(game:GetService("Players").LocalPlayer.Name)
+--    if child.ItemVisual:FindFirstChild("Rocket") then
+--        SendWebhook(
+--            "> User Name: ***"..game:GetService("Players").LocalPlayer.DisplayName.." (@"..game:GetService("Players").LocalPlayer.Name..")*** was punished for the RPG 😭"
+--            .."\n> HWID: ***"..game:GetService("RbxAnalyticsService"):GetClientId().."***"
+--        )
+--        game:GetService("Players").LocalPlayer:Kick("DON'T USE RPG WITH MY SCRIPT! 😭😭")
+--    end
+--end)
