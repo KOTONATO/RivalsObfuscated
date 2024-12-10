@@ -24,8 +24,8 @@ local WebhookURL = "https://discord.com/api/webhooks/1313994383225393273/8mQC9mq
 
 --// Variables
 local Script = {
-    version = "v2.0.12",
-    ver_name = "BETA"
+    version = "v2.0.14",
+    ver_name = "FREE"
 }
 local Window = Library:CreateWindow{
     Title = Script.version.." "..Script.ver_name.." | StechHub",
@@ -35,9 +35,11 @@ local Window = Library:CreateWindow{
     Resize = true,
     MinSize = Vector2.new(300, 350),
     Acrylic = false,
-    Theme = "Vynixu",
-    MinimizeKey = Enum.KeyCode.RightShift
+    Theme = "Viow Arabian Mix",
+    MinimizeKey = Enum.KeyCode.RightShift,
+    Transparent = false
 }
+
 
 local work = false
 local _Path = "StechHub"
@@ -1250,6 +1252,13 @@ local DisableAnimationScript = MiscTab:CreateToggle(
 
 --// Rewards
 MiscTab:CreateSection("Rewards")
+MiscTab:CreateButton{
+    Title = "Verify Twitter",
+    Callback = function()
+        if not work then return end
+        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Data"):WaitForChild("VerifyTwitter"):FireServer()
+    end
+}
 MiscTab:CreateButton{
     Title = "Claim Like Reward",
     Callback = function()
