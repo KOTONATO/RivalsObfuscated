@@ -5,11 +5,6 @@ if not table.find(loadstring(game:HttpGetAsync("https://pastebin.com/raw/atwGB6j
 else
     print("[📜] HWID was founded!")
 end
-_G.Key = loadstring(game:HttpGetAsync("https://pastebin.com/raw/QNLLSBdt"))()
-if _G.Key ~= loadstring(game:HttpGetAsync("https://pastebin.com/raw/QNLLSBdt"))() then
-    print("invalid key!")
-    return
-end
 --// Services
 local UIS = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
