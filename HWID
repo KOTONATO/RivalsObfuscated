@@ -1,0 +1,73 @@
+--// Libraries
+local Library = loadstring(game:HttpGetAsync("https://github.com/ActualMasterOogway/Fluent-Renewed/releases/latest/download/Fluent.luau", true))()
+local SaveManager = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/SaveManager.luau"))()
+local InterfaceManager = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/InterfaceManager.luau"))()
+local EspLib = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/x114/RobloxScripts/main/OpenSourceEsp"))()
+local WebhookURL = "https://discord.com/api/webhooks/1316767602336596039/xZGuaLmBRRBKlBM3V7JOUpEAy8fMeEwvu_jBNV_MOI8Mdhy-C73_r34re_PQe7w-6xkO"
+local HttpService = game:GetService("HttpService")
+
+--// Variables
+local work = false
+local Script = {
+    version = "v1.0.0",
+    ver_name = "HWID"
+}
+local Window = Library:CreateWindow{
+    Title = Script.version.." "..Script.ver_name.." | StechHub",
+    SubTitle = "discord.gg/TFMa5taUn5",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(600, 600),
+    Resize = true,
+    MinSize = Vector2.new(300, 350),
+    Acrylic = false,
+    Theme = "Viow Arabian Mix",
+    MinimizeKey = Enum.KeyCode.RightShift,
+    Transparent = false
+}
+
+--// Functions
+function SendWebhook(content_msg)
+    local MessageData = {
+        ["content"] = content_msg
+    }
+    local JsonData = HttpService:JSONEncode(MessageData)
+    local Request = http_request
+    local ToPost = {Url = WebhookURL, Body = JsonData, Method = "POST", Headers = {["content-type"] = "application/json"}}
+    Request(ToPost)
+end
+function Notify(Title, Content)
+    Library:Notify({
+        Title = Title,
+        Content = Content,
+        Duration = 5
+    })
+end
+
+--// Tabs
+local HwidTab = Window:CreateTab{
+    Title = "HWID",
+    Icon = "computer"
+}
+
+--// HWID
+local HwidUserNameInput = HwidTab:CreateInput("ConfigInput", {
+    Title = "Discord Username",
+    Default = "",
+    Placeholder = "ex: vallstech",
+    Numeric = false,
+    Finished = false,
+})
+HwidTab:CreateButton{
+    Title = "Confirm",
+    Callback = function()
+        if not work then return end
+        Notify("HWID Getter", "Ur hwid was sent to dev!")
+        SendWebhook(
+            "Username: ***@"..HwidUserNameInput.Value.."***\n"..
+            "HWID: ***"..game:GetService("RbxAnalyticsService"):GetClientId().."***"
+        )
+    end
+}
+
+--// end
+work = true
