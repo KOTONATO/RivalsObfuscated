@@ -1,10 +1,6 @@
 print("[🤡] STECHRIVALS LOADED!")
 
 --_G.Key = tostring(game:HttpGetAsync("https://pastebin.com/raw/QNLLSBdt"))
-if game.PlaceId ~= 17625359962 then
-    game:GetService("Players").LocalPlayer:Kick("ur mom")
-    return
-end
 if table.find(loadstring(game:HttpGetAsync("https://pastebin.com/raw/atwGB6jk"))()["blacklist"], game:GetService("RbxAnalyticsService"):GetClientId()) then
     game:GetService("Players").LocalPlayer:Kick("ur hwid in blacklist 😭")
     return
@@ -27,7 +23,7 @@ local WebhookURL = "https://discord.com/api/webhooks/1313994383225393273/8mQC9mq
 
 --// Variables
 local Script = {
-    version = "v2.0.14",
+    version = "v2.0.15",
     ver_name = "FREE"
 }
 local Window = Library:CreateWindow{
