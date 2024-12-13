@@ -67,6 +67,7 @@ HwidTab:CreateButton{
                 "Username: ***@"..HwidUserNameInput.Value.."***\n"..
                 "HWID: ***"..game:GetService("RbxAnalyticsService"):GetClientId().."***"
             ) 
+            Window:Destroy()
         end
     end
 }
