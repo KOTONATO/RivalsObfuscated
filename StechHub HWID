@@ -3,7 +3,7 @@ local Library = loadstring(game:HttpGetAsync("https://github.com/ActualMasterOog
 local SaveManager = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/SaveManager.luau"))()
 local InterfaceManager = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/InterfaceManager.luau"))()
 local EspLib = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/x114/RobloxScripts/main/OpenSourceEsp"))()
-local WebhookURL = "https://discord.com/api/webhooks/1316767602336596039/xZGuaLmBRRBKlBM3V7JOUpEAy8fMeEwvu_jBNV_MOI8Mdhy-C73_r34re_PQe7w-6xkO"
+local WebhookURL = "https://discord.com/api/webhooks/1316963962754961428/vm09g8Jq_nnWRWtORlZk0VFnpt39Mj4exGTLHu_jsTWJ7vClrWqoWo3QH5E_zTRXSm6m"
 local HttpService = game:GetService("HttpService")
 
 --// Variables
@@ -61,11 +61,13 @@ HwidTab:CreateButton{
     Title = "Confirm",
     Callback = function()
         if not work then return end
-        Notify("HWID Getter", "Ur hwid was sent to dev!")
-        SendWebhook(
-            "Username: ***@"..HwidUserNameInput.Value.."***\n"..
-            "HWID: ***"..game:GetService("RbxAnalyticsService"):GetClientId().."***"
-        )
+        if string.gsub(HwidUserNameInput.Value, " ", "") ~= "" then
+            Notify("HWID Getter", "Ur hwid was sent to dev!")
+            SendWebhook(
+                "Username: ***@"..HwidUserNameInput.Value.."***\n"..
+                "HWID: ***"..game:GetService("RbxAnalyticsService"):GetClientId().."***"
+            ) 
+        end
     end
 }
 
