@@ -1,14 +1,22 @@
 print("[🤡] STECHRIVALS LOADED!")
 
-if not table.find(loadstring(game:HttpGetAsync("https://pastebin.com/raw/atwGB6jk"))()["beta"], game:GetService("RbxAnalyticsService"):GetClientId()) then
-    game:GetService("Players").LocalPlayer:Kick("[💔] no ur HWID in list")
-else
-    print("[📜] HWID was founded!")
+_G.Key = tostring(game:HttpGetAsync("https://pastebin.com/raw/QNLLSBdt"))
+if table.find(loadstring(game:HttpGetAsync("https://pastebin.com/raw/atwGB6jk"))()["blacklist"], game:GetService("RbxAnalyticsService"):GetClientId()) then
+    game:GetService("Players").LocalPlayer:Kick("ur hwid in blacklist 😭")
+    return
+end
+if _G.Key ~= tostring(game:HttpGetAsync("https://pastebin.com/raw/QNLLSBdt")) then
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Invalid key!",
+        Text = "StechHub"
+    })
+    return
 end
 --// Services
 local UIS = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
 local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
 
 --// Libraries
 local Library = loadstring(game:HttpGetAsync("https://github.com/ActualMasterOogway/Fluent-Renewed/releases/latest/download/Fluent.luau", true))()
@@ -19,7 +27,7 @@ local WebhookURL = "https://discord.com/api/webhooks/1313994383225393273/8mQC9mq
 
 --// Variables
 local Script = {
-    version = "v2.0.18",
+    version = "v2.0.2",
     ver_name = "BETA"
 }
 local Window = Library:CreateWindow{
@@ -61,7 +69,8 @@ local AimLock = {
     Enabled = false,
     Prediction = 0.1,
     Holding = false,
-    AimPart = "Head"
+    AimPart = "Head",
+    Offset = {0, 0}
 }
 local AutoFire = {
     Enabled = false,
@@ -94,14 +103,21 @@ local ViewModels = {
     GunMaterial = Enum.Material.Neon,
     GunMaterialList = MaterialsList,
     CustomColor = false,
-    GunColor = Color3.fromRGB(255,255,255)
+    GunColor = Color3.fromRGB(255,255,255),
+    FoV = {
+        Enabled = false,
+        X = 0,
+        Y = 0,
+        Z = 0
+    }
 }
 local Misc = {
     DisableAnim = false,
     FastSpeedEnabled = false,
     FastSpeedMultiplier = 0,
     FlyEnabled = false,
-    FlySpeed = 0
+    FlySpeed = 0,
+    Noclip = false
 }
 local ConfigTable = {
     ConfigSelected = nil,
@@ -210,12 +226,9 @@ function LookAt(target)
         target.Position
     )
 end
-function LockAt(target)
-    workspace.Camera.CFrame = CFrame.new(
-        workspace.Camera.CFrame.Position,
-        target.Position + 
-        target.Velocity * AimLock.Prediction
-    )
+function LockAt(x, y)
+    local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+    mousemoverel((x - mouse.X), (y - mouse.Y))
 end
 function GetSilentAimPart(Player)
     local closestPart = nil
@@ -268,8 +281,11 @@ function LockAimFunc(value)
                 local Player = GetClosestPlayerToMouse(AimLockFov.Visible, tonumber(AimLockFov.Radius))
                 if Player then
                     local Part = Player.Character[AimLock.AimPart]
-                    LockAt(Part)
+                    local Pos = workspace.CurrentCamera:WorldToScreenPoint(Part.Position)
+                    LockAt(Pos.X, Pos.Y)
                 end
+            else
+                break
             end
         end
     end
@@ -512,6 +528,10 @@ function FlyEnable()
             speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.StrafingNoPhysics,true)
             speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Swimming,true)
             speaker.Character.Humanoid:ChangeState(Enum.HumanoidStateType.RunningNoPhysics)
+            speaker.Character.Humanoid.Animate.Enabled = true
+            for i,v in next, speaker.Character.Humanoid:GetPlayingAnimationTracks() do
+                v:AdjustSpeed(1)
+            end
         else 
             for i = 1, speeds do
                 task.spawn(function()
@@ -613,6 +633,63 @@ function FlyFunc(value)
     Misc.FlyEnabled = value
     FlyEnable()
 end
+function ChangeViewModelsFoV(value)
+    if not work then return end
+    ViewModels.FovEnabled = value
+    if ViewModels.FovEnabled then
+        while task.wait(.01) do
+            if ViewModels.FovEnabled then
+                local succ, err = pcall(function()
+                    local ViewModelsObject = workspace.ViewModels.FirstPerson:GetChildren()[1]
+                    local hrp = ViewModelsObject.HumanoidRootPart
+        
+                    for _, object : Motor6D in hrp:GetChildren() do
+                        if object.Name ~= "LeftArm" or object.Name ~= "RightArm" then
+                            object.C1 = CFrame.new(ViewModels.FoV.X, ViewModels.FoV.Y, ViewModels.FoV.Z)
+                        end
+                    end
+                end)
+                print(succ, err)
+            end
+        end 
+    end
+end
+function NoclipFunc(value)
+    if not work then return end
+    Misc.Noclip = value
+    if Misc.Noclip then
+        while task.wait() do
+            if Misc.Noclip then
+                local stepped
+                while task.wait() do
+                    if Misc.Noclip then
+                        for a, b in pairs(workspace:GetChildren()) do
+                            if b.Name == game:GetService("Players").LocalPlayer.Name then
+
+                                for i, v in pairs(workspace[game:GetService("Players").LocalPlayer.Name]:GetChildren()) do
+                                    if v:IsA("BasePart") then
+                                        v.CanCollide = false
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    else
+        for a, b in pairs(workspace:GetChildren()) do
+            if b.Name == game:GetService("Players").LocalPlayer.Name then
+
+                for i, v in pairs(workspace[game:GetService("Players").LocalPlayer.Name]:GetChildren()) do
+                    if v:IsA("BasePart") and v:FindFirstChildWhichIsA("WrapTarget") then
+                        v.CanCollide = true
+                    end
+                end
+            end
+        end
+    end
+end
 
 --// Connections
 UIS.InputBegan:Connect(SilentAimUIS)
@@ -645,87 +722,76 @@ local CreditsTab = Window:CreateTab{
 }
 
 --// LockAim
--- local LockAimSection = AimTab:CreateSection("Aim Lock")
--- local LockAimToggle = AimTab:CreateToggle(
---     "LockAimToggle",
---     {
---         Title = "Enabled",
---         Default = false,
---         Callback = LockAimFunc
---     }
--- )
--- local LockAimKeybind = AimTab:CreateKeybind(
---     "LockAimKeybind",
---     {
---         Title = "Keybind",
---         Mode = "Toggle",
---         Default = "Y",
---         Callback = function()
---             LockAimToggle:SetValue(not AimLock.Enabled)
---             if AimLock.Enabled then
---                 TurnOn.Playing = true
---             else
---                 TurnOff.Playing = true
---             end
---             Notify("Lock Aim", EnabledDisabled[tostring(AimLock.Enabled)])
---         end
---     }
--- )
--- local AimLockFovVisible = AimTab:CreateToggle(
---     "AimLockFovVisible",
---     {
---         Title = "FOV Enabled",
---         Default = false,
---         Callback = function(value)
---             if not work then return end
---             AimLockFov.Visible = value
---             while task.wait() do
---                 AimLockFov.Position = game:GetService("UserInputService"):GetMouseLocation()
---             end
---         end
---     }
--- )
--- local AimLockFovRadius = AimTab:CreateSlider(
---     "AimLockFovRadius", {
---     Title = "FOV Radius",
---     Default = AimLockFov.Radius,
---     Min = 0,
---     Max = 1000,
---     Rounding = 0,
---     Callback = function(value)
---         AimLockFov.Radius = value
---     end
--- })
--- local AimLockFovVisibleFovColor = AimTab:CreateColorpicker(
---     "SilentAimFovColor", {
---     Title = "FOV Color",
---     Default = Color3.fromRGB(0, 0, 255),
---     Callback = function(value)
---         AimLockFov.Color = value
---     end
--- })
--- local AimLockHitPrediction = AimTab:CreateSlider(
---     "AimLockHitPrediction", {
---     Title = "Prediction",
---     Default = 0,
---     Min = 0,
---     Max = 1.4,
---     Rounding = 3,
---     Callback = function(value)
---         AimLock.Prediction = value
---     end
--- })
--- local AimLockPart = AimTab:CreateDropdown(
---     "AimLockPart", {
---     Title = "Aim Part",
---     Values = {"HumanoidRootPart", "Head"},
---     Multi = false,
---     Default = 1,
---     }
--- )
--- AimLockPart:OnChanged(function(value)
---     AimLock.AimPart = value
--- end)
+local LockAimSection = AimTab:CreateSection("Aim Lock")
+local LockAimToggle = AimTab:CreateToggle(
+    "LockAimToggle",
+    {
+        Title = "Enabled",
+        Default = false,
+        Callback = LockAimFunc
+    }
+)
+local LockAimKeybind = AimTab:CreateKeybind(
+    "LockAimKeybind",
+    {
+        Title = "Keybind",
+        Mode = "Toggle",
+        Default = "Y",
+        Callback = function()
+            LockAimToggle:SetValue(not AimLock.Enabled)
+            if AimLock.Enabled then
+                TurnOn.Playing = true
+            else
+                TurnOff.Playing = true
+            end
+            Notify("Lock Aim", EnabledDisabled[tostring(AimLock.Enabled)])
+        end
+    }
+)
+local AimLockFovVisible = AimTab:CreateToggle(
+    "AimLockFovVisible",
+    {
+        Title = "FOV Enabled",
+        Default = false,
+        Callback = function(value)
+            if not work then return end
+            AimLockFov.Visible = value
+            while task.wait() do
+                AimLockFov.Position = game:GetService("UserInputService"):GetMouseLocation()
+            end
+        end
+    }
+)
+local AimLockFovRadius = AimTab:CreateSlider(
+    "AimLockFovRadius", {
+    Title = "FOV Radius",
+    Default = AimLockFov.Radius,
+    Min = 0,
+    Max = 1000,
+    Rounding = 0,
+    Callback = function(value)
+        AimLockFov.Radius = value
+    end
+})
+local AimLockFovVisibleFovColor = AimTab:CreateColorpicker(
+    "SilentAimFovColor", {
+    Title = "FOV Color",
+    Default = Color3.fromRGB(0, 0, 255),
+    Callback = function(value)
+        AimLockFov.Color = value
+    end
+})
+local AimLockPart = AimTab:CreateDropdown(
+    "AimLockPart", {
+    Title = "Aim Part",
+    Values = {"HumanoidRootPart", "Head"},
+    Multi = false,
+    Default = 1,
+    }
+)
+AimLockPart:OnChanged(function(value)
+    AimLock.AimPart = value
+end)
 
 --// SilentAim
 local SilentAimSection = AimTab:CreateSection("Silent Aim")
@@ -1117,6 +1183,47 @@ local NoHandsToggle = VisualsTab:CreateToggle(
         Callback = HandsToggle
     }
 )
+local CustomViewModelsFoV = VisualsTab:CreateToggle(
+    "CustomViewModelsFoV",
+    {
+        Title = "Custom ViewModels FoV",
+        Default = false,
+        Callback = ChangeViewModelsFoV
+    }
+)
+local ViewModelsFovX = VisualsTab:CreateSlider(
+    "ViewModelsFovZ", {
+    Title = "Position X",
+    Default = 0,
+    Min = -2,
+    Max = 2,
+    Rounding = 2,
+    Callback = function(value)
+        ViewModels.FoV.X = value
+    end
+})
+local ViewModelsFovY = VisualsTab:CreateSlider(
+    "ViewModelsFovY", {
+    Title = "Position Y",
+    Default = 0,
+    Min = -2,
+    Max = 2,
+    Rounding = 2,
+    Callback = function(value)
+        ViewModels.FoV.Y = value
+    end
+})
+local ViewModelsFovZ = VisualsTab:CreateSlider(
+    "ViewModelsFovZ", {
+    Title = "Position Z",
+    Default = 0,
+    Min = -2,
+    Max = 2,
+    Rounding = 2,
+    Callback = function(value)
+        ViewModels.FoV.Z = value
+    end
+})
 local CustomGunMaterialToggle = VisualsTab:CreateToggle(
     "CustomGunMaterialToggle",
     {
@@ -1372,10 +1479,27 @@ local FlyToggle = MiscTab:CreateToggle(
         Callback = FlyFunc
     }
 )
+local FlyKeyBind = MiscTab:CreateKeybind(
+    "FlyKeyBind",
+    {
+        Title = "Fly KeyBind",
+        Mode = "Toggle",
+        Default = "Q",
+        Callback = function()
+            FlyToggle:SetValue(not Misc.FlyEnabled)
+            if Misc.FlyEnabled then
+                TurnOn.Playing = true
+            else
+                TurnOff.Playing = true
+            end
+            Notify("Fly", EnabledDisabled[tostring(Misc.FlyEnabled)])
+        end
+    }
+)
 local FlySpeed = MiscTab:CreateSlider(
     "FlySpeed", {
     Title = "Fly Speed",
-    Default = 0,
+    Default = 1,
     Min = 0,
     Max = 5,
     Rounding = 0,
@@ -1383,6 +1507,31 @@ local FlySpeed = MiscTab:CreateSlider(
         Misc.FlySpeed = value
     end
 })
+local NoclipToggle = MiscTab:CreateToggle(
+    "NoclipToggle",
+    {
+        Title = "Noclip",
+        Default = false,
+        Callback = NoclipFunc
+    }
+)
+local NoclipKeyBind = MiscTab:CreateKeybind(
+    "NoclipKeyBind",
+    {
+        Title = "Noclip KeyBind",
+        Mode = "Toggle",
+        Default = "J",
+        Callback = function()
+            NoclipToggle:SetValue(not Misc.Noclip)
+            if Misc.Noclip then
+                TurnOn.Playing = true
+            else
+                TurnOff.Playing = true
+            end
+            Notify("Noclip", EnabledDisabled[tostring(Misc.Noclip)])
+        end
+    }
+)
 local DisableAnimationScript = MiscTab:CreateToggle(
     "DisableAnimationScript",
     {
@@ -1518,8 +1667,16 @@ CreditsTab:CreateParagraph("Paragraph", {
     Content = "Owner / Scripter"
 })
 CreditsTab:CreateParagraph("Paragraph", {
+    Title = "{👑} reddeadt777",
+    Content = "TYSM for help <3!!!"
+})
+CreditsTab:CreateParagraph("Paragraph", {
     Title = "{🛠️} mefdron, ilayah",
     Content = "Tester"
+})
+CreditsTab:CreateParagraph("Paragraph", {
+    Title = "{💸} kj12_45, Sepegaa, Levani, nas",
+    Content = "Donors and supporters"
 })
 
 --// Run
@@ -1535,14 +1692,3 @@ SendWebhook(
     .."***\n> Version: ***"..Script.version
     .."***\n> Name: ***"..Script.ver_name.."***"
 )
-
---workspace:WaitForChild("ViewModels", 9e9):WaitForChild("FirstPerson", 9e9).ChildAdded:Connect(function(child)
---    if child.Name:find(game:GetService("Players").LocalPlayer.Name)
---    if child.ItemVisual:FindFirstChild("Rocket") then
---        SendWebhook(
---            "> User Name: ***"..game:GetService("Players").LocalPlayer.DisplayName.." (@"..game:GetService("Players").LocalPlayer.Name..")*** was punished for the RPG 😭"
---            .."\n> HWID: ***"..game:GetService("RbxAnalyticsService"):GetClientId().."***"
---        )
---        game:GetService("Players").LocalPlayer:Kick("DON'T USE RPG WITH MY SCRIPT! 😭😭")
---    end
---end)
