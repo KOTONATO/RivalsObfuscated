@@ -1,16 +1,9 @@
 print("[🤡] STECHRIVALS LOADED!")
 
-_G.Key = tostring(game:HttpGetAsync("https://pastebin.com/raw/QNLLSBdt"))
-if table.find(loadstring(game:HttpGetAsync("https://pastebin.com/raw/atwGB6jk"))()["blacklist"], game:GetService("RbxAnalyticsService"):GetClientId()) then
-    game:GetService("Players").LocalPlayer:Kick("ur hwid in blacklist 😭")
-    return
-end
-if _G.Key ~= tostring(game:HttpGetAsync("https://pastebin.com/raw/QNLLSBdt")) then
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "Invalid key!",
-        Text = "StechHub"
-    })
-    return
+if not table.find(loadstring(game:HttpGetAsync("https://pastebin.com/raw/atwGB6jk"))()["beta"], game:GetService("RbxAnalyticsService"):GetClientId()) then
+    game:GetService("Players").LocalPlayer:Kick("[💔] no ur HWID in list")
+else
+    print("[📜] HWID was founded!")
 end
 --// Services
 local UIS = game:GetService("UserInputService")
@@ -28,7 +21,7 @@ local WebhookURL = "https://discord.com/api/webhooks/1313994383225393273/8mQC9mq
 --// Variables
 local Script = {
     version = "v2.0.2",
-    ver_name = "BETA"
+    ver_name = "DEV"
 }
 local Window = Library:CreateWindow{
     Title = Script.version.." "..Script.ver_name.." | StechHub",
@@ -95,7 +88,7 @@ local Visuals = {
     NeonLightBrightness = 2,
     OldTime = Lighting.ClockTime,
     AntiFlashbang = false,
-    GrenadeChams = false
+    AntiSmoke = false
 }
 local ViewModels = {
     NoHands = false,
@@ -690,6 +683,20 @@ function NoclipFunc(value)
         end
     end
 end
+function AntiSmokeFunc(value)
+    Visuals.AntiSmoke = value
+    if Visuals.AntiSmoke then
+        while task.wait() do
+            if Visuals.AntiSmoke then
+                if workspace:FindFirstChild("Smoke Grenade") then
+                    workspace:FindFirstChild("Smoke Grenade"):Destroy()
+                end
+            else
+                break
+            end
+        end
+    end
+end
 
 --// Connections
 UIS.InputBegan:Connect(SilentAimUIS)
@@ -1085,6 +1092,14 @@ local AntiFlashbangToggle = VisualsTab:CreateToggle(
         end
     }
 )
+local AntiSmokeToggle = VisualsTab:CreateToggle(
+    "AntiSmokeToggle",
+    {
+        Title = "Anti Smoke",
+        Default = false,
+        Callback = AntiSmokeFunc
+    }
+)
 local WorldReflectanceToggle = VisualsTab:CreateToggle(
     "WorldReflectanceToggle",
     {
@@ -1186,7 +1201,7 @@ local NoHandsToggle = VisualsTab:CreateToggle(
 local CustomViewModelsFoV = VisualsTab:CreateToggle(
     "CustomViewModelsFoV",
     {
-        Title = "Custom ViewModels FoV",
+        Title = "Custom ViewModels Pos",
         Default = false,
         Callback = ChangeViewModelsFoV
     }
@@ -1269,7 +1284,7 @@ ModelsChangerTab:CreateSection("Primary")
 local Assault_Rifle_Dropdown = {ModelsChangerTab:CreateDropdown(
     "Assault_Rifle_Dropdown", {
     Title = "Assault Rifle Model",
-    Values = {"None", "AUG", "AK-47", "Boneclaw Rifle"},
+    Values = {"None", "AUG", "AK-47", "Boneclaw Rifle", "AKEY-47"},
     Multi = false,
     Default = 1,
     }
@@ -1277,7 +1292,7 @@ local Assault_Rifle_Dropdown = {ModelsChangerTab:CreateDropdown(
 local Sniper_Dropdown = {ModelsChangerTab:CreateDropdown(
     "Sniper_Dropdown", {
     Title = "Sniper Model",
-    Values = {"None", "Hyper Sniper", "Keyper", "Pixel Sniper", "Eyething Sniper"},
+    Values = {"None", "Hyper Sniper", "Keyper", "Pixel Sniper", "Eyething Sniper", "Gingerbread Sniper"},
     Multi = false,
     Default = 1,
     }
@@ -1285,7 +1300,7 @@ local Sniper_Dropdown = {ModelsChangerTab:CreateDropdown(
 local Crossbow_Dropdown = {ModelsChangerTab:CreateDropdown(
     "Crossbow_Dropdown", {
     Title = "Crossbow Model",
-    Values = {"None", "Pixel Crossbow"},
+    Values = {"None", "Pixel Crossbow", "Frostbite Crossbow"},
     Multi = false,
     Default = 1,
     }
@@ -1303,7 +1318,7 @@ ModelsChangerTab:CreateSection("Secondary")
 local Handgun_Dropdown = {ModelsChangerTab:CreateDropdown(
     "Handgun_Dropdown", {
     Title = "Handgun Model",
-    Values = {"None", "Pixel Handgun", "Blaster", "Pumpkin Handgun"},
+    Values = {"None", "Pixel Handgun", "Blaster", "Pumpkin Handgun", "Gingerbread Handgun"},
     Multi = false,
     Default = 1,
     }
@@ -1319,7 +1334,7 @@ local Revolver_Dropdown = {ModelsChangerTab:CreateDropdown(
 local Shorty_Dropdown = {ModelsChangerTab:CreateDropdown(
     "Shorty_Dropdown", {
     Title = "Shorty Model",
-    Values = {"None", "Demon Shorty", "Not So Shorty", "Too Shorty"},
+    Values = {"None", "Demon Shorty", "Not So Shorty", "Too Shorty", "Wrapped Shorty"},
     Multi = false,
     Default = 1,
     }
@@ -1337,7 +1352,7 @@ ModelsChangerTab:CreateSection("Melee")
 local Katana_Dropdown = {ModelsChangerTab:CreateDropdown(
     "Katana_Dropdown", {
     Title = "Katana Model",
-    Values = {"None", "Pixel Katana", "Saber", "Devil's Trident", "Lightning Bolt"},
+    Values = {"None", "Pixel Katana", "Saber", "Devil's Trident", "Lightning Bolt", "2025 Katana"},
     Multi = false,
     Default = 1,
     }
@@ -1353,7 +1368,7 @@ local Knife_Dropdown = {ModelsChangerTab:CreateDropdown(
 local Scythe_Dropdown = {ModelsChangerTab:CreateDropdown(
     "Scythe_Dropdown", {
     Title = "Scythe Model",
-    Values = {"None", "Keythe", "Anchor", "Bat Scythe", "Scythe of Death"},
+    Values = {"None", "Keythe", "Anchor", "Bat Scythe", "Scythe of Death", "Cryo Scythe"},
     Multi = false,
     Default = 1,
     }
@@ -1363,7 +1378,7 @@ ModelsChangerTab:CreateSection("Utility")
 local Grenade_Dropdown = {ModelsChangerTab:CreateDropdown(
     "Grenade_Dropdown", {
     Title = "Grenade Model",
-    Values = {"None", "Soul Grenade", "Whoopee Cushion", "Water Balloon"},
+    Values = {"None", "Soul Grenade", "Whoopee Cushion", "Water Balloon", "Jingle Grenade"},
     Multi = false,
     Default = 1,
     }
