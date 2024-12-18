@@ -1,10 +1,5 @@
 print("[🤡] STECHRIVALS LOADED!")
 
-if not table.find(loadstring(game:HttpGetAsync("https://pastebin.com/raw/atwGB6jk"))()["beta"], game:GetService("RbxAnalyticsService"):GetClientId()) then
-    game:GetService("Players").LocalPlayer:Kick("[💔] no ur HWID in list")
-else
-    print("[📜] HWID was founded!")
-end
 --// Services
 local UIS = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
@@ -12,16 +7,15 @@ local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 
 --// Libraries
-local Library = loadstring(game:HttpGetAsync("https://github.com/ActualMasterOogway/Fluent-Renewed/releases/latest/download/Fluent.luau", true))()
+local Library = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local SaveManager = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/SaveManager.luau"))()
 local InterfaceManager = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/InterfaceManager.luau"))()
 local EspLib = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/x114/RobloxScripts/main/OpenSourceEsp"))()
-local WebhookURL = "https://discord.com/api/webhooks/1313994383225393273/8mQC9mq-cMcqpi3RxY-WK89tKqatIzK-RbnJnu9KT-VV-vZbk7WFL2zqadaJNevzk9ti"
 
 --// Variables
 local Script = {
     version = "v2.0.2",
-    ver_name = "DEV"
+    ver_name = "OPEN SOURCED lol"
 }
 local Window = Library:CreateWindow{
     Title = Script.version.." "..Script.ver_name.." | StechHub",
@@ -159,15 +153,6 @@ SilentAimFov.Radius = 60
 SilentAimFov.Visible = false
 
 --// Funcs
-function SendWebhook(content_msg)
-    local MessageData = {
-        ["content"] = content_msg
-    }
-    local JsonData = HttpService:JSONEncode(MessageData)
-    local Request = http_request
-    local ToPost = {Url = WebhookURL, Body = JsonData, Method = "POST", Headers = {["content-type"] = "application/json"}}
-    Request(ToPost)
-end
 function Notify(Title, Content)
     Library:Notify({
         Title = Title,
@@ -703,34 +688,34 @@ UIS.InputBegan:Connect(SilentAimUIS)
 Lighting.ChildAdded:Connect(AntiFlashbangFunc)
 
 --// Tabs
-local AimTab = Window:CreateTab{
+local AimTab = Window:AddTab({
     Title = "Aim Bot",
     Icon = "target"
-}
-local VisualsTab = Window:CreateTab{
+})
+local VisualsTab = Window:AddTab({
     Title = "Visuals",
     Icon = "eye"
-}
-local ModelsChangerTab = Window:CreateTab{
+})
+local ModelsChangerTab = Window:AddTab({
     Title = "Models Changer",
     Icon = "sword"
-}
-local MiscTab = Window:CreateTab{
+})
+local MiscTab = Window:AddTab({
     Title = "Misc",
     Icon = "banana"
-}
-local ConfigTab = Window:CreateTab{
+})
+local ConfigTab = Window:AddTab({
     Title = "Config",
     Icon = "folder"
-}
-local CreditsTab = Window:CreateTab{
+})
+local CreditsTab = Window:AddTab({
     Title = "Credits",
     Icon = "book"
-}
+})
 
 --// LockAim
-local LockAimSection = AimTab:CreateSection("Aim Lock")
-local LockAimToggle = AimTab:CreateToggle(
+local LockAimSection = AimTab:AddSection("Aim Lock")
+local LockAimToggle = AimTab:AddToggle(
     "LockAimToggle",
     {
         Title = "Enabled",
@@ -738,7 +723,7 @@ local LockAimToggle = AimTab:CreateToggle(
         Callback = LockAimFunc
     }
 )
-local LockAimKeybind = AimTab:CreateKeybind(
+local LockAimKeybind = AimTab:AddKeybind(
     "LockAimKeybind",
     {
         Title = "Keybind",
@@ -755,7 +740,7 @@ local LockAimKeybind = AimTab:CreateKeybind(
         end
     }
 )
-local AimLockFovVisible = AimTab:CreateToggle(
+local AimLockFovVisible = AimTab:AddToggle(
     "AimLockFovVisible",
     {
         Title = "FOV Enabled",
@@ -769,7 +754,7 @@ local AimLockFovVisible = AimTab:CreateToggle(
         end
     }
 )
-local AimLockFovRadius = AimTab:CreateSlider(
+local AimLockFovRadius = AimTab:AddSlider(
     "AimLockFovRadius", {
     Title = "FOV Radius",
     Default = AimLockFov.Radius,
@@ -780,7 +765,7 @@ local AimLockFovRadius = AimTab:CreateSlider(
         AimLockFov.Radius = value
     end
 })
-local AimLockFovVisibleFovColor = AimTab:CreateColorpicker(
+local AimLockFovVisibleFovColor = AimTab:AddColorpicker(
     "SilentAimFovColor", {
     Title = "FOV Color",
     Default = Color3.fromRGB(0, 0, 255),
@@ -788,7 +773,7 @@ local AimLockFovVisibleFovColor = AimTab:CreateColorpicker(
         AimLockFov.Color = value
     end
 })
-local AimLockPart = AimTab:CreateDropdown(
+local AimLockPart = AimTab:AddDropdown(
     "AimLockPart", {
     Title = "Aim Part",
     Values = {"HumanoidRootPart", "Head"},
@@ -801,8 +786,8 @@ AimLockPart:OnChanged(function(value)
 end)
 
 --// SilentAim
-local SilentAimSection = AimTab:CreateSection("Silent Aim")
-local SilentAimToggle = AimTab:CreateToggle(
+local SilentAimSection = AimTab:AddSection("Silent Aim")
+local SilentAimToggle = AimTab:AddToggle(
     "SilentAimToggle",
     {
         Title = "Enabled (YOU NEED TO SPAM TO MAKE IT WORK!)",
@@ -812,7 +797,7 @@ local SilentAimToggle = AimTab:CreateToggle(
         end
     }
 )
-local SilentAimKeybind = AimTab:CreateKeybind(
+local SilentAimKeybind = AimTab:AddKeybind(
     "SilentAimKeybind",
     {
         Title = "Keybind",
@@ -829,7 +814,7 @@ local SilentAimKeybind = AimTab:CreateKeybind(
         end
     }
 )
-local SilentAimFovVisible = AimTab:CreateToggle(
+local SilentAimFovVisible = AimTab:AddToggle(
     "SilentAimFovVisible",
     {
         Title = "FOV Enabled",
@@ -843,7 +828,7 @@ local SilentAimFovVisible = AimTab:CreateToggle(
         end
     }
 )
-local SilentAimFovRadius = AimTab:CreateSlider(
+local SilentAimFovRadius = AimTab:AddSlider(
     "SilentAimFovRadius", {
     Title = "FOV Radius",
     Default = SilentAimFov.Radius,
@@ -854,7 +839,7 @@ local SilentAimFovRadius = AimTab:CreateSlider(
         SilentAimFov.Radius = value
     end
 })
-local SilentAimFovColor = AimTab:CreateColorpicker(
+local SilentAimFovColor = AimTab:AddColorpicker(
     "SilentAimFovColor", {
     Title = "FOV Color",
     Default = Color3.fromRGB(255, 0, 0),
@@ -862,7 +847,7 @@ local SilentAimFovColor = AimTab:CreateColorpicker(
         SilentAimFov.Color = value
     end
 })
-local SilentAimHitChance = AimTab:CreateSlider(
+local SilentAimHitChance = AimTab:AddSlider(
     "SilentAimHitChance", {
     Title = "Hit Chance",
     Default = 100,
@@ -873,7 +858,7 @@ local SilentAimHitChance = AimTab:CreateSlider(
         SilentAim.HitChance = value
     end
 })
-local SilentAimPart = AimTab:CreateDropdown(
+local SilentAimPart = AimTab:AddDropdown(
     "SilentAimPart", {
     Title = "Aim Parts",
     Values = {"HumanoidRootPart", "Head", "RightUpperArm", "LeftUpperArm", "RightLowerLeg", "LeftLowerLeg"},
@@ -889,7 +874,7 @@ SilentAimPart:OnChanged(function(Value)
     
     SilentAim.AimPart = Values
 end)
-local NotWorkIfFlashedToggle = AimTab:CreateToggle(
+local NotWorkIfFlashedToggle = AimTab:AddToggle(
     "NotWorkIfFlashedToggle",
     {
         Title = "Not Work if Flashed",
@@ -901,8 +886,8 @@ local NotWorkIfFlashedToggle = AimTab:CreateToggle(
 )
 
 --// Auto Fire
--- AimTab:CreateSection("Auto Fire")
--- local AutoFireEnabled = AimTab:CreateToggle(
+-- AimTab:AddSection("Auto Fire")
+-- local AutoFireEnabled = AimTab:AddToggle(
 --     "AutoFireEnabled",
 --     {
 --         Title = "Enabled",
@@ -910,7 +895,7 @@ local NotWorkIfFlashedToggle = AimTab:CreateToggle(
 --         Callback = AutoFireFunc
 --     }
 -- )
--- local AutoFireKeybind = AimTab:CreateKeybind(
+-- local AutoFireKeybind = AimTab:AddKeybind(
 --     "AutoFireKeybind",
 --     {
 --         Title = "Keybind",
@@ -927,7 +912,7 @@ local NotWorkIfFlashedToggle = AimTab:CreateToggle(
 --         end
 --     }
 -- )
--- local AutoFireDelay = AimTab:CreateSlider(
+-- local AutoFireDelay = AimTab:AddSlider(
 --     "TriggerBotDelay", {
 --     Title = "Fire Delay",
 --     Default = 0,
@@ -938,7 +923,7 @@ local NotWorkIfFlashedToggle = AimTab:CreateToggle(
 --         AutoFire.FireDelay = value
 --     end
 -- })
--- local AutoFireCooldown = AimTab:CreateSlider(
+-- local AutoFireCooldown = AimTab:AddSlider(
 --     "AutoFireCooldown", {
 --     Title = "Fire Cooldown",
 --     Default = 0,
@@ -951,8 +936,8 @@ local NotWorkIfFlashedToggle = AimTab:CreateToggle(
 -- })
 
 --// TriggerBot
-local TriggerBotSection = AimTab:CreateSection("Trigger Bot")
-local TriggerBotToggle = AimTab:CreateToggle(
+local TriggerBotSection = AimTab:AddSection("Trigger Bot")
+local TriggerBotToggle = AimTab:AddToggle(
     "TriggerBotToggle",
     {
         Title = "Enabled",
@@ -966,7 +951,7 @@ local TriggerBotToggle = AimTab:CreateToggle(
         end
     }
 )
-local TriggerBotKeybind = AimTab:CreateKeybind(
+local TriggerBotKeybind = AimTab:AddKeybind(
     "TriggerBotKeybind",
     {
         Title = "Keybind",
@@ -983,7 +968,7 @@ local TriggerBotKeybind = AimTab:CreateKeybind(
         end
     }
 )
-local TriggerBotDelay = AimTab:CreateSlider(
+local TriggerBotDelay = AimTab:AddSlider(
     "TriggerBotDelay", {
     Title = "Fire Delay",
     Default = 0,
@@ -994,7 +979,7 @@ local TriggerBotDelay = AimTab:CreateSlider(
         TriggerBot.FireDelay = value
     end
 })
-local TriggerBotHealthCheck = AimTab:CreateToggle(
+local TriggerBotHealthCheck = AimTab:AddToggle(
     "TriggerBotHealthCheck",
     {
         Title = "Health Check",
@@ -1019,8 +1004,8 @@ EspLib.NamesFont = 2
 EspLib.NamesSize = 17
 
 --// ESP
-local EspSection = VisualsTab:CreateSection("ESP")
-local EspToggle = VisualsTab:CreateToggle(
+local EspSection = VisualsTab:AddSection("ESP")
+local EspToggle = VisualsTab:AddToggle(
     "EspToggle",
     {
         Title = "Enabled",
@@ -1030,7 +1015,7 @@ local EspToggle = VisualsTab:CreateToggle(
         end
     }
 )
-local EspBoxColorPicker = VisualsTab:CreateColorpicker(
+local EspBoxColorPicker = VisualsTab:AddColorpicker(
     "EspBoxColorPicker", {
     Title = "Color",
     Default = Color3.fromRGB(255,255,255),
@@ -1039,7 +1024,7 @@ local EspBoxColorPicker = VisualsTab:CreateColorpicker(
         EspLib.NameColor = value
     end
 })
-local EspHealthBarToggle = VisualsTab:CreateToggle(
+local EspHealthBarToggle = VisualsTab:AddToggle(
     "EspHealthBarToggle",
     {
         Title = "Health Bar",
@@ -1049,7 +1034,7 @@ local EspHealthBarToggle = VisualsTab:CreateToggle(
         end
     }
 )
-local HealthBarPosDropdown = VisualsTab:CreateDropdown(
+local HealthBarPosDropdown = VisualsTab:AddDropdown(
     "HealthBarPosDropdown", {
     Title = "Health Bar Position",
     Values = {"Left", "Bottom", "Right"},
@@ -1060,7 +1045,7 @@ local HealthBarPosDropdown = VisualsTab:CreateDropdown(
 HealthBarPosDropdown:OnChanged(function(value)
     EspLib.HealthBarSide = value
 end)
-local EspNamesToggle = VisualsTab:CreateToggle(
+local EspNamesToggle = VisualsTab:AddToggle(
     "EspNamesToggle",
     {
         Title = "Names",
@@ -1070,7 +1055,7 @@ local EspNamesToggle = VisualsTab:CreateToggle(
         end
     }
 )
--- local GrenadesChamsToggle = VisualsTab:CreateToggle(
+-- local GrenadesChamsToggle = VisualsTab:AddToggle(
 --     "GrenadesChamsToggle",
 --     {
 --         Title = "Grenades Chams",
@@ -1081,8 +1066,8 @@ local EspNamesToggle = VisualsTab:CreateToggle(
 --     }
 -- )
 
-local VisualsSection = VisualsTab:CreateSection("World")
-local AntiFlashbangToggle = VisualsTab:CreateToggle(
+local VisualsSection = VisualsTab:AddSection("World")
+local AntiFlashbangToggle = VisualsTab:AddToggle(
     "AntiFlashbangToggle",
     {
         Title = "Anti Flashbang",
@@ -1092,7 +1077,7 @@ local AntiFlashbangToggle = VisualsTab:CreateToggle(
         end
     }
 )
-local AntiSmokeToggle = VisualsTab:CreateToggle(
+local AntiSmokeToggle = VisualsTab:AddToggle(
     "AntiSmokeToggle",
     {
         Title = "Anti Smoke",
@@ -1100,7 +1085,7 @@ local AntiSmokeToggle = VisualsTab:CreateToggle(
         Callback = AntiSmokeFunc
     }
 )
-local WorldReflectanceToggle = VisualsTab:CreateToggle(
+local WorldReflectanceToggle = VisualsTab:AddToggle(
     "WorldReflectanceToggle",
     {
         Title = "World Reflectance",
@@ -1108,7 +1093,7 @@ local WorldReflectanceToggle = VisualsTab:CreateToggle(
         Callback = MakeWorldReflectance
     }
 )
-local ReflectanceSlider = VisualsTab:CreateSlider(
+local ReflectanceSlider = VisualsTab:AddSlider(
     "ReflectanceSlider", {
     Title = "Reflectance",
     Default = 0.25,
@@ -1119,13 +1104,13 @@ local ReflectanceSlider = VisualsTab:CreateSlider(
         Visuals.Reflectance = value
     end
 })
-local WorldColorPicker = VisualsTab:CreateColorpicker(
+local WorldColorPicker = VisualsTab:AddColorpicker(
     "WorldColorPicker", {
     Title = "World Color",
     Default = Lighting.Ambient,
     Callback = ChangeWorldColor
 })
-local CustomTimeToggle = VisualsTab:CreateToggle(
+local CustomTimeToggle = VisualsTab:AddToggle(
     "CustomTimeToggle",
     {
         Title = "Custom Time",
@@ -1143,7 +1128,7 @@ local CustomTimeToggle = VisualsTab:CreateToggle(
         end
     }
 )
-local CustomTimeSlider = VisualsTab:CreateSlider(
+local CustomTimeSlider = VisualsTab:AddSlider(
     "CustomTimeSlider", {
     Title = "ClockTime",
     Default = 0,
@@ -1157,7 +1142,7 @@ local CustomTimeSlider = VisualsTab:CreateSlider(
         end
     end
 })
-local NeonLightToggle = VisualsTab:CreateToggle(
+local NeonLightToggle = VisualsTab:AddToggle(
     "NeonLightToggle",
     {
         Title = "Neon Light",
@@ -1165,7 +1150,7 @@ local NeonLightToggle = VisualsTab:CreateToggle(
         Callback = NeonLight
     }
 )
-local NeonLightRangeSlider = VisualsTab:CreateSlider(
+local NeonLightRangeSlider = VisualsTab:AddSlider(
     "NeonLightRangeSlider", {
     Title = "Neon Light Range",
     Default = Visuals.NeonLightRange,
@@ -1176,7 +1161,7 @@ local NeonLightRangeSlider = VisualsTab:CreateSlider(
         Visuals.NeonLightRange = value
     end
 })
-local NeonLightBrightSlider = VisualsTab:CreateSlider(
+local NeonLightBrightSlider = VisualsTab:AddSlider(
     "NeonLightBrightSlider", {
     Title = "Neon Light Brightness",
     Default = Visuals.NeonLightBrightness,
@@ -1189,8 +1174,8 @@ local NeonLightBrightSlider = VisualsTab:CreateSlider(
 })
 
 --// ViewModels
-local ViewModelsSection = VisualsTab:CreateSection("Viewmodels")
-local NoHandsToggle = VisualsTab:CreateToggle(
+local ViewModelsSection = VisualsTab:AddSection("Viewmodels")
+local NoHandsToggle = VisualsTab:AddToggle(
     "NoHandsToggle",
     {
         Title = "No Hands",
@@ -1198,7 +1183,7 @@ local NoHandsToggle = VisualsTab:CreateToggle(
         Callback = HandsToggle
     }
 )
-local CustomViewModelsFoV = VisualsTab:CreateToggle(
+local CustomViewModelsFoV = VisualsTab:AddToggle(
     "CustomViewModelsFoV",
     {
         Title = "Custom ViewModels Pos",
@@ -1206,7 +1191,7 @@ local CustomViewModelsFoV = VisualsTab:CreateToggle(
         Callback = ChangeViewModelsFoV
     }
 )
-local ViewModelsFovX = VisualsTab:CreateSlider(
+local ViewModelsFovX = VisualsTab:AddSlider(
     "ViewModelsFovZ", {
     Title = "Position X",
     Default = 0,
@@ -1217,7 +1202,7 @@ local ViewModelsFovX = VisualsTab:CreateSlider(
         ViewModels.FoV.X = value
     end
 })
-local ViewModelsFovY = VisualsTab:CreateSlider(
+local ViewModelsFovY = VisualsTab:AddSlider(
     "ViewModelsFovY", {
     Title = "Position Y",
     Default = 0,
@@ -1228,7 +1213,7 @@ local ViewModelsFovY = VisualsTab:CreateSlider(
         ViewModels.FoV.Y = value
     end
 })
-local ViewModelsFovZ = VisualsTab:CreateSlider(
+local ViewModelsFovZ = VisualsTab:AddSlider(
     "ViewModelsFovZ", {
     Title = "Position Z",
     Default = 0,
@@ -1239,7 +1224,7 @@ local ViewModelsFovZ = VisualsTab:CreateSlider(
         ViewModels.FoV.Z = value
     end
 })
-local CustomGunMaterialToggle = VisualsTab:CreateToggle(
+local CustomGunMaterialToggle = VisualsTab:AddToggle(
     "CustomGunMaterialToggle",
     {
         Title = "Custom Gun Material",
@@ -1247,7 +1232,7 @@ local CustomGunMaterialToggle = VisualsTab:CreateToggle(
         Callback = CustomGunMaterial
     }
 )
-local CustomGunMaterialDropdown = VisualsTab:CreateDropdown(
+local CustomGunMaterialDropdown = VisualsTab:AddDropdown(
     "CustomGunMaterialDropdown", {
     Title = "Material",
     Values = MaterialsList,
@@ -1262,7 +1247,7 @@ CustomGunMaterialDropdown:OnChanged(function(value)
         ViewModels.GunMaterial = Enum.Material[value]
     end
 end)
-local CustomVMColorToggle = VisualsTab:CreateToggle(
+local CustomVMColorToggle = VisualsTab:AddToggle(
     "CustomGunColorToggle",
     {
         Title = "Custom Viewmodels Color",
@@ -1270,7 +1255,7 @@ local CustomVMColorToggle = VisualsTab:CreateToggle(
         Callback = CustomGunColor
     }
 )
-local CustomVMColorPicker = VisualsTab:CreateColorpicker(
+local CustomVMColorPicker = VisualsTab:AddColorpicker(
     "CustomGunColorPicker", {
     Title = "Color",
     Default = Color3.fromRGB(255, 255, 255),
@@ -1280,8 +1265,8 @@ local CustomVMColorPicker = VisualsTab:CreateColorpicker(
 })
 
 --// ModelsChanger
-ModelsChangerTab:CreateSection("Primary")
-local Assault_Rifle_Dropdown = {ModelsChangerTab:CreateDropdown(
+ModelsChangerTab:AddSection("Primary")
+local Assault_Rifle_Dropdown = {ModelsChangerTab:AddDropdown(
     "Assault_Rifle_Dropdown", {
     Title = "Assault Rifle Model",
     Values = {"None", "AUG", "AK-47", "Boneclaw Rifle", "AKEY-47"},
@@ -1289,7 +1274,7 @@ local Assault_Rifle_Dropdown = {ModelsChangerTab:CreateDropdown(
     Default = 1,
     }
 ), "Assault Rifle"}
-local Sniper_Dropdown = {ModelsChangerTab:CreateDropdown(
+local Sniper_Dropdown = {ModelsChangerTab:AddDropdown(
     "Sniper_Dropdown", {
     Title = "Sniper Model",
     Values = {"None", "Hyper Sniper", "Keyper", "Pixel Sniper", "Eyething Sniper", "Gingerbread Sniper"},
@@ -1297,7 +1282,7 @@ local Sniper_Dropdown = {ModelsChangerTab:CreateDropdown(
     Default = 1,
     }
 ), "Sniper"}
-local Crossbow_Dropdown = {ModelsChangerTab:CreateDropdown(
+local Crossbow_Dropdown = {ModelsChangerTab:AddDropdown(
     "Crossbow_Dropdown", {
     Title = "Crossbow Model",
     Values = {"None", "Pixel Crossbow", "Frostbite Crossbow"},
@@ -1305,7 +1290,7 @@ local Crossbow_Dropdown = {ModelsChangerTab:CreateDropdown(
     Default = 1,
     }
 ), "Crossbow"}
-local Bow_Dropdown = {ModelsChangerTab:CreateDropdown(
+local Bow_Dropdown = {ModelsChangerTab:AddDropdown(
     "Bow_Dropdown", {
     Title = "Bow Model",
     Values = {"None", "Bat Bow"},
@@ -1314,8 +1299,8 @@ local Bow_Dropdown = {ModelsChangerTab:CreateDropdown(
     }
 ), "Bow"}
 
-ModelsChangerTab:CreateSection("Secondary")
-local Handgun_Dropdown = {ModelsChangerTab:CreateDropdown(
+ModelsChangerTab:AddSection("Secondary")
+local Handgun_Dropdown = {ModelsChangerTab:AddDropdown(
     "Handgun_Dropdown", {
     Title = "Handgun Model",
     Values = {"None", "Pixel Handgun", "Blaster", "Pumpkin Handgun", "Gingerbread Handgun"},
@@ -1323,7 +1308,7 @@ local Handgun_Dropdown = {ModelsChangerTab:CreateDropdown(
     Default = 1,
     }
 ), "Handgun"}
-local Revolver_Dropdown = {ModelsChangerTab:CreateDropdown(
+local Revolver_Dropdown = {ModelsChangerTab:AddDropdown(
     "Revolver_Dropdown", {
     Title = "Revolver Model",
     Values = {"None", "Boneclaw Revolver"},
@@ -1331,7 +1316,7 @@ local Revolver_Dropdown = {ModelsChangerTab:CreateDropdown(
     Default = 1,
     }
 ), "Revolver"}
-local Shorty_Dropdown = {ModelsChangerTab:CreateDropdown(
+local Shorty_Dropdown = {ModelsChangerTab:AddDropdown(
     "Shorty_Dropdown", {
     Title = "Shorty Model",
     Values = {"None", "Demon Shorty", "Not So Shorty", "Too Shorty", "Wrapped Shorty"},
@@ -1339,7 +1324,7 @@ local Shorty_Dropdown = {ModelsChangerTab:CreateDropdown(
     Default = 1,
     }
 ), "Shorty"}
-local Uzi_Dropdown = {ModelsChangerTab:CreateDropdown(
+local Uzi_Dropdown = {ModelsChangerTab:AddDropdown(
     "Uzi_Dropdown", {
     Title = "Uzi Model",
     Values = {"None", "Demon Uzi", "Electro Uzi", "Water Uzi"},
@@ -1348,8 +1333,8 @@ local Uzi_Dropdown = {ModelsChangerTab:CreateDropdown(
     }
 ), "Uzi"}
 
-ModelsChangerTab:CreateSection("Melee")
-local Katana_Dropdown = {ModelsChangerTab:CreateDropdown(
+ModelsChangerTab:AddSection("Melee")
+local Katana_Dropdown = {ModelsChangerTab:AddDropdown(
     "Katana_Dropdown", {
     Title = "Katana Model",
     Values = {"None", "Pixel Katana", "Saber", "Devil's Trident", "Lightning Bolt", "2025 Katana"},
@@ -1357,7 +1342,7 @@ local Katana_Dropdown = {ModelsChangerTab:CreateDropdown(
     Default = 1,
     }
 ), "Katana"}
-local Knife_Dropdown = {ModelsChangerTab:CreateDropdown(
+local Knife_Dropdown = {ModelsChangerTab:AddDropdown(
     "Knife_Dropdown", {
     Title = "Knife Model",
     Values = {"None", "Karambit", "Chancla", "Machete"},
@@ -1365,7 +1350,7 @@ local Knife_Dropdown = {ModelsChangerTab:CreateDropdown(
     Default = 1,
     }
 ), "Knife"}
-local Scythe_Dropdown = {ModelsChangerTab:CreateDropdown(
+local Scythe_Dropdown = {ModelsChangerTab:AddDropdown(
     "Scythe_Dropdown", {
     Title = "Scythe Model",
     Values = {"None", "Keythe", "Anchor", "Bat Scythe", "Scythe of Death", "Cryo Scythe"},
@@ -1374,8 +1359,8 @@ local Scythe_Dropdown = {ModelsChangerTab:CreateDropdown(
     }
 ), "Scythe"}
 
-ModelsChangerTab:CreateSection("Utility")
-local Grenade_Dropdown = {ModelsChangerTab:CreateDropdown(
+ModelsChangerTab:AddSection("Utility")
+local Grenade_Dropdown = {ModelsChangerTab:AddDropdown(
     "Grenade_Dropdown", {
     Title = "Grenade Model",
     Values = {"None", "Soul Grenade", "Whoopee Cushion", "Water Balloon", "Jingle Grenade"},
@@ -1383,7 +1368,7 @@ local Grenade_Dropdown = {ModelsChangerTab:CreateDropdown(
     Default = 1,
     }
 ), "Grenade"}
-local Molotov_Dropdown = {ModelsChangerTab:CreateDropdown(
+local Molotov_Dropdown = {ModelsChangerTab:AddDropdown(
     "Molotov_Dropdown", {
     Title = "Molotov Model",
     Values = {"None", "Hexxed Candle", "Coffee", "Torch"},
@@ -1449,8 +1434,8 @@ for index, object in ListOfModelsDropdown do
 end
 
 --// Misc
-MiscTab:CreateSection("Player")
-local FastSpeedEnabled = MiscTab:CreateToggle(
+MiscTab:AddSection("Player")
+local FastSpeedEnabled = MiscTab:AddToggle(
     "FastSpeedEnabled",
     {
         Title = "Fast Speed Enabled",
@@ -1458,7 +1443,7 @@ local FastSpeedEnabled = MiscTab:CreateToggle(
         Callback = FastSpeedFunc
     }
 )
-local FastSpeedKeybind = MiscTab:CreateKeybind(
+local FastSpeedKeybind = MiscTab:AddKeybind(
     "FastSpeedKeybind",
     {
         Title = "Fast Speed Keybind",
@@ -1475,7 +1460,7 @@ local FastSpeedKeybind = MiscTab:CreateKeybind(
         end
     }
 )
-local FastSpeedMultiplier = MiscTab:CreateSlider(
+local FastSpeedMultiplier = MiscTab:AddSlider(
     "FastSpeedMultiplier", {
     Title = "Fast Speed Multiplier",
     Default = 0,
@@ -1486,7 +1471,7 @@ local FastSpeedMultiplier = MiscTab:CreateSlider(
         Misc.FastSpeedMultiplier = value
     end
 })
-local FlyToggle = MiscTab:CreateToggle(
+local FlyToggle = MiscTab:AddToggle(
     "FlyToggle",
     {
         Title = "Fly",
@@ -1494,7 +1479,7 @@ local FlyToggle = MiscTab:CreateToggle(
         Callback = FlyFunc
     }
 )
-local FlyKeyBind = MiscTab:CreateKeybind(
+local FlyKeyBind = MiscTab:AddKeybind(
     "FlyKeyBind",
     {
         Title = "Fly KeyBind",
@@ -1511,7 +1496,7 @@ local FlyKeyBind = MiscTab:CreateKeybind(
         end
     }
 )
-local FlySpeed = MiscTab:CreateSlider(
+local FlySpeed = MiscTab:AddSlider(
     "FlySpeed", {
     Title = "Fly Speed",
     Default = 1,
@@ -1522,7 +1507,7 @@ local FlySpeed = MiscTab:CreateSlider(
         Misc.FlySpeed = value
     end
 })
-local NoclipToggle = MiscTab:CreateToggle(
+local NoclipToggle = MiscTab:AddToggle(
     "NoclipToggle",
     {
         Title = "Noclip",
@@ -1530,7 +1515,7 @@ local NoclipToggle = MiscTab:CreateToggle(
         Callback = NoclipFunc
     }
 )
-local NoclipKeyBind = MiscTab:CreateKeybind(
+local NoclipKeyBind = MiscTab:AddKeybind(
     "NoclipKeyBind",
     {
         Title = "Noclip KeyBind",
@@ -1547,7 +1532,7 @@ local NoclipKeyBind = MiscTab:CreateKeybind(
         end
     }
 )
-local DisableAnimationScript = MiscTab:CreateToggle(
+local DisableAnimationScript = MiscTab:AddToggle(
     "DisableAnimationScript",
     {
         Title = "Disable Animation Script (funny)",
@@ -1557,29 +1542,29 @@ local DisableAnimationScript = MiscTab:CreateToggle(
 )
 
 --// Rewards
-MiscTab:CreateSection("Rewards")
-MiscTab:CreateButton{
+MiscTab:AddSection("Rewards")
+MiscTab:AddButton{
     Title = "Verify Twitter",
     Callback = function()
         if not work then return end
         game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Data"):WaitForChild("VerifyTwitter"):FireServer()
     end
 }
-MiscTab:CreateButton{
+MiscTab:AddButton{
     Title = "Claim Like Reward",
     Callback = function()
         if not work then return end
         game:GetService("ReplicatedStorage").Remotes.Data.ClaimLikeReward:FireServer()
     end
 }
-MiscTab:CreateButton{
+MiscTab:AddButton{
     Title = "Claim Notifications Reward",
     Callback = function()
         if not work then return end
         game:GetService("ReplicatedStorage").Remotes.Data.ClaimNotificationsReward:FireServer()
     end
 }
-MiscTab:CreateButton{
+MiscTab:AddButton{
     Title = "Claim Favorite Reward",
     Callback = function()
         if not work then return end
@@ -1598,7 +1583,7 @@ function _RefreshList(dropdown)
     dropdown:SetValues(FixedList)
     Notify("Config", "Refreshed!")
 end
-function _CreateConfig(name)
+function _AddConfig(name)
     local _FilePath = _ConfigPath.."/"..name..ConfigTable.ConfigName
     if string.gsub(name, " ", "") ~= "" then
         if not isfile(_FilePath) then
@@ -1606,7 +1591,7 @@ function _CreateConfig(name)
             ConfigTable.ConfigSelected = name
             _RefreshList(ConfigDrowdown)
             ConfigDrowdown:SetValue(name)
-            Notify("Config", "File created!")
+            Notify("Config", "File Addd!")
             return
         else
             Notify("Config", "File already exists!")
@@ -1618,7 +1603,7 @@ function _CreateConfig(name)
 end
 
 --// Config
-ConfigDrowdown = ConfigTab:CreateDropdown(
+ConfigDrowdown = ConfigTab:AddDropdown(
     "ConfigDrowdown", {
     Title = "Configs",
     Description = "List of all configs in 'yourexploit/explorer/StechHub/Rivals/settings'",
@@ -1630,14 +1615,14 @@ ConfigDrowdown = ConfigTab:CreateDropdown(
 ConfigDrowdown:OnChanged(function(value)
     ConfigTable.ConfigSelected = value
 end)
-ConfigTab:CreateButton{
+ConfigTab:AddButton{
     Title = "Refresh Config List",
     Callback = function()
         if not work then return end
         _RefreshList(ConfigDrowdown)
     end
 }
-ConfigTab:CreateButton{
+ConfigTab:AddButton{
     Title = "Load Config",
     Callback = function()
         if not work then return end
@@ -1645,7 +1630,7 @@ ConfigTab:CreateButton{
         Notify("Config", "Successfully loaded!")
     end
 }
-ConfigTab:CreateButton{
+ConfigTab:AddButton{
     Title = "Save Config",
     Callback = function()
         if not work then return end
@@ -1653,23 +1638,23 @@ ConfigTab:CreateButton{
         Notify("Config", "Successfully saved!")
     end
 }
-local ConfigInput = ConfigTab:CreateInput("ConfigInput", {
+local ConfigInput = ConfigTab:AddInput("ConfigInput", {
     Title = "File Name",
     Default = "",
     Placeholder = "",
     Numeric = false,
     Finished = false,
 })
-ConfigTab:CreateButton{
-    Title = "Create Config",
+ConfigTab:AddButton{
+    Title = "Add Config",
     Callback = function()
         if not work then return end
-        _CreateConfig(ConfigInput.Value)
+        _AddConfig(ConfigInput.Value)
     end
 }
 
 --// Credits
-CreditsTab:CreateButton{
+CreditsTab:AddButton{
     Title = "StechHub discord (pls)",
     Callback = function()
         if not work then return end
@@ -1677,19 +1662,19 @@ CreditsTab:CreateButton{
         Notify("Copied!", "Discord invite copied!")
     end
 }
-CreditsTab:CreateParagraph("Paragraph", {
+CreditsTab:AddParagraph({
     Title = "{📜} kolbasa",
     Content = "Owner / Scripter"
 })
-CreditsTab:CreateParagraph("Paragraph", {
+CreditsTab:AddParagraph({
     Title = "{👑} reddeadt777",
     Content = "TYSM for help <3!!!"
 })
-CreditsTab:CreateParagraph("Paragraph", {
+CreditsTab:AddParagraph({
     Title = "{🛠️} mefdron, ilayah",
     Content = "Tester"
 })
-CreditsTab:CreateParagraph("Paragraph", {
+CreditsTab:AddParagraph({
     Title = "{💸} kj12_45, Sepegaa, Levani, nas",
     Content = "Donors and supporters"
 })
@@ -1700,10 +1685,3 @@ Window:SelectTab(6)
 
 SaveManager:SetLibrary(Library)
 SaveManager:SetFolder(_RivalsPath)
-
-SendWebhook(
-    "> User Name: ***"..game:GetService("Players").LocalPlayer.DisplayName.." (@"..game:GetService("Players").LocalPlayer.Name..")"
-    .."***\n> HWID: ***"..game:GetService("RbxAnalyticsService"):GetClientId()
-    .."***\n> Version: ***"..Script.version
-    .."***\n> Name: ***"..Script.ver_name.."***"
-)
